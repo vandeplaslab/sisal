@@ -1,12 +1,11 @@
 import numpy as np
-from model import beta_vae,beta_vae_synthetic
+from model import beta_vae
 import torch
 import torch.nn.functional as F
 from torch.optim import Adam
-from torch.autograd import Variable 
+#from torch.autograd import Variable 
 from torch.utils.tensorboard import SummaryWriter
 from datetime import datetime
-#from metric import Metric
 from utils import reparametrize,compute_latent_mean,emp_std,limit_latent_space_precomp, metric_disentangling,compute_estimate_std
 import pickle as pkl
 

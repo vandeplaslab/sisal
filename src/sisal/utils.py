@@ -4,7 +4,6 @@ from collections import Counter
 from torch.autograd import Variable
 
 
-
 def reparametrize(mu, logvar):
         std = logvar.div(2).exp()
         eps = Variable(std.data.new(std.size()).normal_())
