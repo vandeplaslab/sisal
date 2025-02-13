@@ -1,12 +1,14 @@
 import numpy as np
-from model import beta_vae
+import sys
+sys.path.insert(0, "/".join(sys.path[0].split("/")[0:-2])+('/src'))
+#import model
+from sisal.model import beta_vae
 import torch
 import torch.nn.functional as F
 from torch.optim import Adam
-#from torch.autograd import Variable 
 from torch.utils.tensorboard import SummaryWriter
 from datetime import datetime
-from utils import reparametrize,compute_latent_mean,emp_std,limit_latent_space_precomp, metric_disentangling,compute_estimate_std
+from sisal.utils import reparametrize,compute_latent_mean,emp_std,limit_latent_space_precomp, metric_disentangling,compute_estimate_std
 import pickle as pkl
 
 
@@ -33,11 +35,9 @@ class Solver():
         self.train_bool = args.train
         self.PATH = 'model/model_weights.pth' ## Path to save the model
         self.beta = args.beta
-        #self.metric = Metric()
-        self.evaluate_dis_metric = args.evaluate_dis_metric
-        #torch.save(self.model, self.PATH)
-        self.std_threshold = args.threshold_collapse
-        self.save_loss = args.save_loss
+        #self.evaluate_dis_metric = args.evaluate_dis_metric
+        #self.std_threshold = args.threshold_collapse
+        self.save_loss = False
         
 
         
@@ -203,15 +203,14 @@ class Solver():
                 else :
                     early_stop +=1
 
-                if self.evaluate_dis_metric :
-                        with torch.no_grad():
-                            full_latent= compute_latent_mean(train_loader,self.model)
-                            full_std = emp_std(full_latent)
-                            z_min, z_max = limit_latent_space_precomp(full_latent)
-                            dis_metric, _ = metric_disentangling(self.model,z_min,z_max,full_std,self.std_threshold)
-                            tb_x = epoch * len(train_loader)
-                            self.writer.add_scalar('Metric/disentangling', dis_metric, tb_x)
-                            #self.writer.add_scalar('Metric/reconstruction', running_recons, tb_x)                    
+                # if self.evaluate_dis_metric :
+                #         with torch.no_grad():
+                #             full_latent= compute_latent_mean(train_loader,self.model)
+                #             full_std = emp_std(full_latent)
+                #             z_min, z_max = limit_latent_space_precomp(full_latent)
+                #             dis_metric, _ = metric_disentangling(self.model,z_min,z_max,full_std,self.std_threshold)
+                #             tb_x = epoch * len(train_loader)
+                #             self.writer.add_scalar('Metric/disentangling', dis_metric, tb_x)
 
             
         if self.save_loss :
