@@ -37,7 +37,7 @@ class Solver():
         self.beta = args.beta
         #self.evaluate_dis_metric = args.evaluate_dis_metric
         #self.std_threshold = args.threshold_collapse
-        self.save_loss = False
+        self.save_loss = args.save_loss
         
 
         

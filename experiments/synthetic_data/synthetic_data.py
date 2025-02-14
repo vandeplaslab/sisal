@@ -293,6 +293,25 @@ def plot_spectral_separate(s_col,spectrum_names):
     # plt.setp(stemlines2, 'linewidth',3)
     #plt.savefig('plots/synthetic_data/spectral_pattern.png',bbox_inches='tight',dpi=300)
 
+def return_synthetic_data():
+    in_size = 212
+    batch_size = 32
+
+    image_circle, image_triangle,image_square, mask ,overlapp = create_image_new(eps_scale=eps_scale,coeff_scale=coeff_scale,coeff_loc=coeff_loc)
+    
+    s, _ = create_spectrum(in_size)
+
+
+    C = overlapp.flatten().reshape(-1,1)
+    data = C*( np.outer(image_circle.flatten(),s[0])+np.outer(image_triangle.flatten(),s[1]) + np.outer(image_square.flatten(),s[2]))
+    # Add noise
+
+    r = np.random.RandomState(8970)
+    centroids = data + r.normal(scale = eps_scale,size=data.shape)
+    return centroids
+
+
+
 
 def return_normalized_data_synthetic():
     print('### Using Synthetic data')
@@ -395,7 +414,7 @@ def full_index_normalized_data_synthetic():
     val = np.array(val,dtype = 'float32')[:,np.newaxis,:]
     index = np.array(df['index'])
     mask = np.array(df['mask'])
-    alpha = np.array(df['alpha'])
+    alpha = np.array(df['alpha']) 
 
     loader = torch.utils.data.DataLoader([ [val[i], mask[i], alpha[i], index[i]] for i in range(val.shape[0])], 
                                         shuffle=False, 

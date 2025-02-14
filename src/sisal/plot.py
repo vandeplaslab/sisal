@@ -101,7 +101,7 @@ def plot(args,PATH, train_loader, test_loader):
         print('Ploting Latent train')
         if args.z_dim == 2 :
             #p_temp = 0.2
-            #p_temp = 0.7
+            #p_temp = 0.7   
             p_temp=1
             #p_temp = 0.7
             p.plot_latent_dim_with_var(full_latent, vars , label,mask_to_name,args.beta,p=p_temp)
