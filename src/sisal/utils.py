@@ -2,7 +2,8 @@ import numpy as np
 import torch
 from collections import Counter
 from torch.autograd import Variable
-
+import pandas as pd
+from sklearn.preprocessing import StandardScaler
 
 def reparametrize(mu, logvar):
         std = logvar.div(2).exp()
@@ -322,8 +323,86 @@ def compute_loss(b,  n=1):
 
     return train_loss,train_recons,train_kl , test_loss,dis_metric
 
+def normalize_train_test_full_loader(centroids: np.ndarray, mask:np.ndarray, batch_size: int = 32 , alpha=None):
+    """
+    Normalize the given data and return the train, test, and full data loaders.
+
+    Args:
+        centroids (np.ndarray): A NumPy array of shape (n_points, n_dim) representing the data points.
+        masks (np.ndarray) : A NumPy array of shape (n_points) representing the mask (if unknown set all to 1)
+        batch_size (int, optional): The batch size for the DataLoader. Defaults to 32.
+        alpha (np.ndarray) : A NumPy array of shape (n_points) representing the alpha (SNR) value if it is known
+
+    Returns:
+            - A list with two DataLoaders (train and test).
+            - A full DataLoader including indices of the datapoints
+
+    Notes:
+        - This function standardizes the features using StandardScaler.
+        - It splits the data into 80% training and 20% testing.
+        - It prepares PyTorch DataLoaders for both sets.
+        - A full DataLoader is created with additional fields: mask, alpha, and index.
+    """
+
+    df = pd.DataFrame(centroids)
+    df['mask'] = mask
+    df['index'] = range(centroids.shape[0])
 
 
+    train = df.sample(frac=0.8,random_state=42)
+    test = df.drop(train.index)
+
+
+    val_train = train.drop(['index','mask'], axis=1)
+    val_test = test.drop(['index','mask'], axis=1)
+
+    train = pd.DataFrame(train)
+    test = pd.DataFrame(test)
+    
+    scaler = StandardScaler()
+    scaler.fit(val_train)
+    val_train = scaler.transform(val_train)
+    val_test = scaler.transform(val_test)
+    
+
+    val=[val_train,val_test]
+    d = [train,test]
+    loaders = []
+    for i in range(len(val)) :
+        v = val[i]
+        df = d[i]
+        v = np.array(v,dtype = 'float32')   [:,np.newaxis,:]
+        mask = np.array(df['mask'])
+        loader = torch.utils.data.DataLoader([ [v[j],mask[j]] for j in range(v.shape[0])], 
+                                            shuffle=False, 
+                                            num_workers=3,
+                                            batch_size=batch_size,
+                                            pin_memory=True,
+                                            drop_last=True)
+        loaders.append(loader)
+    
+    #Compute the full loader 
+    val = df.drop(['index','mask'], axis=1)
+    val = scaler.transform(val)
+    
+    val = np.array(val,dtype = 'float32')[:,np.newaxis,:]
+    index = np.array(df['index'])
+    mask = np.array(df['mask'])
+
+    if alpha is None:
+        full_loader = loader = torch.utils.data.DataLoader([ [val[i], mask[i], alpha[i], index[i]] for i in range(val.shape[0])], 
+                                            shuffle=False, 
+                                            batch_size=batch_size,
+                                            pin_memory=True,
+                                            drop_last=True)
+    else:
+        full_loader = loader = torch.utils.data.DataLoader([ [val[i], mask[i], alpha[i], index[i]] for i in range(val.shape[0])], 
+                                            shuffle=False, 
+                                            batch_size=batch_size,
+                                            pin_memory=True,
+                                            drop_last=True)
+    
+    return loaders[0],loaders[1], full_loader 
 
 
 
