@@ -80,7 +80,7 @@ class Triangle(Shape):
 
 def create_image(eps_scale , coeff_scale , coeff_loc ):
     image_shape = np.array([358, 666])
-    image_total = np.zeros(image_shape)
+    #image_total = np.zeros(image_shape)
     image_circle = np.zeros(image_shape)
     image_triangle = np.zeros(image_shape)
     image_square = np.zeros(image_shape)
@@ -95,47 +95,24 @@ def create_image(eps_scale , coeff_scale , coeff_loc ):
             in_c = c.is_in(i,j)
             in_t = t.is_in(i,j)
             in_s = s.is_in(i,j)
-            # if in_c and in_t :
-            #     image_circle[i,j] = np.abs(np.random.normal(loc = coeff_loc/2 , scale = (np.sqrt(2)/2)*coeff_scale))
-            #     image_triangle[i,j] = np.abs(np.random.normal(loc = coeff_loc/2 , scale = (np.sqrt(2)/2)*coeff_scale))
             if in_c : 
                 image_circle[i,j] = np.random.normal(loc = coeff_loc , scale = coeff_scale)
             if in_t :
                 image_triangle[i,j] = np.random.normal(loc = coeff_loc , scale = coeff_scale)
             if in_s :
                 image_square[i,j] = np.random.normal(loc = coeff_loc , scale = coeff_scale)
-            # elif in_t :
-            #     image_triangle[i,j] = np.abs(np.random.normal(loc = coeff_loc , scale = coeff_scale))
-            # elif in_c :
-            #     image_circle[i,j] = np.abs(np.random.normal(loc = coeff_loc , scale = coeff_scale))
             mask[i,j] = get_mask([in_s, in_t,in_c])
-            #mask[i,j] = 2*int(in_t)+int(in_c)  
-    #image_circle = image_circle + np.random.normal(scale = eps_scale,size=image_shape)
-    #image_triangle = image_triangle+ np.random.normal(scale = eps_scale,size=image_shape)
-    #noise =  np.random.normal(scale = eps_scale,size=image_shape)
+          
     return image_circle, image_triangle, image_square,mask
 
 def get_colormap():
     # Import the 'cmr.pride' colormap
-    pride_cmap = plt.get_cmap('cmr.pride')
-
-    # Modify the colormap to ensure distinct endpoints
-    n_col = 2**3+1  # You can adjust this based on your preference
-    new_colors = pride_cmap(np.linspace(0, 1, n_col))
-
-    # # Make sure the first and last colors are different
-    # cmap_spa = 'cmr.pride'
-    # new_colors = cmr.take_cmap_colors(cmap_spa, n_col, return_fmt='hex')
-    # new_colors[-1] = [0.0, 0.5, 1.0, 1.0]  # Set the last color to blue
-    # modified_pride_cmap = mcolors.ListedColormap(new_colors)
-
+    #pride_cmap = plt.get_cmap('cmr.pride')
     n_col = 2**3  
     cmap_spa = 'cmr.pride'
     new_colors = cmr.take_cmap_colors(cmap_spa, n_col, return_fmt='hex')
     new_colors[-1] = [0.0, 0.5, 1.0, 1.0]  # Set the last color to blue
-    #col_dict = dict(zip(range(len(new_colors)),new_colors))
     modified_pride_cmap = LinearSegmentedColormap.from_list('pride', new_colors, N=n_col)
-
     
     return modified_pride_cmap
 
@@ -149,7 +126,6 @@ def create_image_new(eps_scale , coeff_scale , coeff_loc ):
     t = Triangle(250, 350 , 200  ,300)
     s = Square(130,350, 200) 
     
-    #counter = np.zeros(image_shape)  ## Count how many shapes overlapp in each pixel 
     overlapp = np.zeros(image_shape) ## Remover issues with 1/counter = 0 by adding ones 
     
     np.random.seed(seed=3868)
@@ -160,20 +136,10 @@ def create_image_new(eps_scale , coeff_scale , coeff_loc ):
             in_t = t.is_in(i,j)
             in_s = s.is_in(i,j)
             if in_c :
-                #np.random.seed(1789)
-                #r1 = np.random.RandomState(2789)
-                #s1 = r1.uniform(0, 1000, in_size)
-                #image_circle[i,j] = np.abs(r1.normal(loc = coeff_loc , scale = coeff_scale))
                 image_circle[i,j] = np.abs(np.random.normal(loc = coeff_loc , scale = coeff_scale))
             if in_t :
-                #np.random.seed(3639)
-                #r2 = np.random.RandomState(3639)
-                #image_triangle[i,j] = np.abs(r2.normal(loc = coeff_loc , scale = coeff_scale))
                 image_triangle[i,j] = np.abs(np.random.normal(loc = coeff_loc , scale = coeff_scale))
             if in_s :
-                #np.random.seed(7896)
-                #r3 = np.random.RandomState(7896)
-                #image_square[i,j] = np.abs(r3.normal(loc = coeff_loc , scale = coeff_scale))
                 image_square[i,j] = np.abs(np.random.normal(loc = coeff_loc , scale = coeff_scale))
             
             count = int(in_c) + int(in_t) + int(in_s)
@@ -181,14 +147,8 @@ def create_image_new(eps_scale , coeff_scale , coeff_loc ):
                 overlapp[i,j] = 1
             else :
                 overlapp[i,j] = 1/count
-
-            #counter[i,j] = count 
-
             mask[i,j] = get_mask([in_s, in_t,in_c])
-            #mask[i,j] = 2*int(in_t)+int(in_c)  
-    #image_circle = image_circle + np.random.normal(scale = eps_scale,size=image_shape)
-    #image_triangle = image_triangle+ np.random.normal(scale = eps_scale,size=image_shape)
-    #noise =  np.random.normal(scale = eps_scale,size=image_shape)
+            
     return image_circle, image_triangle, image_square,mask , overlapp
 
 def plot_spatial(image,mask, eps_scale=eps_scale , coeff_scale=coeff_scale , coeff_loc=coeff_loc ):
@@ -203,11 +163,6 @@ def plot_spatial_separate(mask, image_circle, image_triangle, image_square):
     _,ax = plt.subplots(ncols=4,figsize =(10,7))
     ax[0].tick_params(axis='x', labelsize=10)
     ax[0].tick_params(axis='y', labelsize=10)
-    #'Dark2'
-    #ax.imshow(mask,cmap='cmr.torch')
-    #'tab20'
-    #ax.imshow(mask,cmap=mpl.colormaps['Paired'])
-    #ax.imshow(mask,cmap=cmap_spa)
     ax[0].imshow(mask,cmap=get_colormap())
     #plt.savefig('plots/synthetic_data/complete/spatial_pattern.png',bbox_inches='tight',dpi=300)
 
@@ -230,24 +185,24 @@ def plot_spatial_separate(mask, image_circle, image_triangle, image_square):
     
 
 # images = [circle, triangle,square]
-def plot_spatial_separate_past(eps_scale=eps_scale , coeff_scale=coeff_scale , coeff_loc=coeff_loc ):
-    image_circle, image_triangle, image_square,mask = create_image(eps_scale,coeff_scale,coeff_loc)
-    images = [image_circle, image_triangle, image_square]
-    _, ax = plt.subplots(2,2,figsize=(8, 5))
-    #print(len(images))
+# def plot_spatial_separate_past(eps_scale=eps_scale , coeff_scale=coeff_scale , coeff_loc=coeff_loc ):
+#     image_circle, image_triangle, image_square,mask = create_image(eps_scale,coeff_scale,coeff_loc)
+#     images = [image_circle, image_triangle, image_square]
+#     _, ax = plt.subplots(2,2,figsize=(8, 5))
+#     #print(len(images))
     
-    ax[0,0].imshow(mask,cmap=cmap_spa)
-    ax[0,0].title.set_text(r"Param $\epsilon \sim N(0,{}^2), c,t,s \sim N({},{}^2)$".format(eps_scale,coeff_loc,coeff_scale))
-    ax[1,0].imshow(images[0])
-    ax[1,0].title.set_text('Circle coeff')
-    ax[0,1].imshow(images[1])
-    ax[0,1].title.set_text('Triangle coeff')
-    ax[1,1].imshow(images[2])
-    ax[1,1].title.set_text('Square coeff')
+#     ax[0,0].imshow(mask,cmap=cmap_spa)
+#     ax[0,0].title.set_text(r"Param $\epsilon \sim N(0,{}^2), c,t,s \sim N({},{}^2)$".format(eps_scale,coeff_loc,coeff_scale))
+#     ax[1,0].imshow(images[0])
+#     ax[1,0].title.set_text('Circle coeff')
+#     ax[0,1].imshow(images[1])
+#     ax[0,1].title.set_text('Triangle coeff')
+#     ax[1,1].imshow(images[2])
+#     ax[1,1].title.set_text('Square coeff')
     #plt.title(r"$\epsilon \sim N(0,{}^2), c,t,s \sim N({},{}^2)$".format(eps_scale,coeff_loc,coeff_scale))
 
     #ax[1].title.set_text(r"$\epsilon \sim N(0,{}^2), c,t,s \sim N({},{}^2)$".format(eps_scale,coeff_loc,coeff_scale))
-    plt.savefig('plots/synthetic_data/separate_coeff.png',bbox_inches='tight',dpi=300)
+    #plt.savefig('plots/synthetic_data/separate_coeff.png',bbox_inches='tight',dpi=300)
 
 def plot_spatial_separate2d(eps_scale=eps_scale , coeff_scale=coeff_scale , coeff_loc=coeff_loc ):
     _, ax = plt.subplots(nrows = 2,figsize=(10, 10))
@@ -260,9 +215,6 @@ def plot_spatial_separate2d(eps_scale=eps_scale , coeff_scale=coeff_scale , coef
     ax[1].imshow(image_tot)
     ax[1].title.set_text('Coefficients')
     
-    #plt.title(r"$\epsilon \sim N(0,{}^2), c,t,s \sim N({},{}^2)$".format(eps_scale,coeff_loc,coeff_scale))
-
-    #ax[1].title.set_text(r"$\epsilon \sim N(0,{}^2), c,t,s \sim N({},{}^2)$".format(eps_scale,coeff_loc,coeff_scale))
     plt.savefig('plots/synthetic_data/mask_coeff.png',bbox_inches='tight')
     plt.savefig('plots/synthetic_data/mask_coeff.pdf',bbox_inches='tight')
 
@@ -301,16 +253,9 @@ def plot_spectral(s_col):
         _, stemlines1, _ = ax[i].stem(x_pos, s, col_dict[index_col[i]], markerfmt=' ')
         plt.setp(stemlines1, 'linewidth', 3)
 
-    # ax[1].title.set_text('Triangle')
-    # _, stemlines2, _ = ax[1].stem(x_pos+0.3, s2, col_dict[2], markerfmt=' ')
-    # plt.setp(stemlines2, 'linewidth',3)
     plt.savefig('plots/synthetic_data/spectral_pattern.png',bbox_inches='tight',dpi=300)
 
 def plot_spectral_separate(s_col,spectrum_names):
-    # len_s_col = len(s_col)
-    # n_col = 2**len_s_col 
-    # colors = cmr.take_cmap_colors(cmap_spa, n_col, return_fmt='hex')
-    # col_dict = dict(zip(range(n_col),colors))
 
     n_col = 2**3  
     cmap_spa = 'cmr.pride'
@@ -334,15 +279,11 @@ def plot_spectral_separate(s_col,spectrum_names):
     short_to_long = {'c':'Circle' , 't':'Triangle', 's':'Square'}
     _,axs = plt.subplots(figsize=(10, 5),nrows=3)
     for i,s in enumerate(s_col) : 
-        #_,ax = plt.subplots(figsize=(10, 5))
         axs[i].tick_params(axis='x', labelsize=10)
         axs[i].tick_params(axis='y', labelsize=10)
-
         z_size = len(s)
         x_pos = np.arange(z_size)
        
-        #ax.title.set_text(short_to_long[names[i]])
-        #ax.set_ylim(bottom=0,top=1500)
         _, stemlines1, _ = axs[i].stem(x_pos, s, col_dict[index_col[i]], markerfmt=' ')
         plt.setp(stemlines1, 'linewidth', 3)
         #plt.savefig('plots/synthetic_data/complete/spectral_pattern_{}.png'.format(short_to_long[names[i]]),bbox_inches='tight',dpi=300)
@@ -361,11 +302,8 @@ def return_normalized_data_synthetic():
 
     image_circle, image_triangle,image_square, mask ,overlapp = create_image_new(eps_scale=eps_scale,coeff_scale=coeff_scale,coeff_loc=coeff_loc)
     
-    #image_total = image_circle+image_triangle+image_square
     s, _ = create_spectrum(in_size)
 
-    # for i in range(3):
-    #     print('norm s{} =  '.format(i), np.linalg.norm(s[i]))
 
     C = overlapp.flatten().reshape(-1,1)
     data = C*( np.outer(image_circle.flatten(),s[0])+np.outer(image_triangle.flatten(),s[1]) + np.outer(image_square.flatten(),s[2]))
@@ -454,12 +392,11 @@ def full_index_normalized_data_synthetic():
     val = df.drop(['index','mask','alpha'], axis=1)
     val = scaler.transform(val)
     
-    #val = np.array(val)[:,np.newaxis]
     val = np.array(val,dtype = 'float32')[:,np.newaxis,:]
     index = np.array(df['index'])
     mask = np.array(df['mask'])
     alpha = np.array(df['alpha'])
-    #mask = (image_circle + image_triangle + image_square).flatten()
+
     loader = torch.utils.data.DataLoader([ [val[i], mask[i], alpha[i], index[i]] for i in range(val.shape[0])], 
                                         shuffle=False, 
                                         batch_size=batch_size,
@@ -480,11 +417,8 @@ def return_normalized_unloader_data_synthetic():
 
     r = np.random.RandomState(8970)
     centroids = data + r.normal(scale = eps_scale,size=data.shape)
-    #s1 = r1.uniform(0, 1000, z_size)
-    #centroids = data + np.random.normal(scale = eps_scale,size=data.shape)
-
-    #alpha_label = 
-    batch_size = 32
+    
+    #batch_size = 32
 
     df = pd.DataFrame(centroids)
     df['mask']= mask.flatten() 
@@ -516,17 +450,6 @@ def return_normalized_unloader_data_synthetic():
 
     return val_train, val_test,total, label_total,alpha,mask_to_name
     
-
-
-    # #val = np.array(val)[:,np.newaxis]
-    # val = np.array(val,dtype = 'float32')
-    # index = np.array(df['index'])
-    # mask = np.array(df['mask'])
-    # alpha = np.array(df['alpha'])
-    
-    # #val=[val_train,val_test]
-  
-    # return val, mask,mask_to_name
 
 def mask_to_name_synthetic():
     #ordered_names = ['noise', 'circle', 'triangle','square', 'mixed']
@@ -599,11 +522,7 @@ def plot_pca():
     n_col = 2**3  
     new_colors = cmr.take_cmap_colors(cmap_spa, n_col, return_fmt='hex')
     col_dict = dict(zip(range(len(new_colors)),new_colors))
-    # new_colors = ['#1f77b4', 'darkorange', 'green', 'firebrick', 'black', 'darkmagenta']    
-    # new_colors = new_colors[:4]
-    # col_dict = dict(zip(range(len(new_colors)),new_colors))
     
-    #plt.figure()
     fig = plt.figure()
     ax = fig.add_subplot(1, 1, 1) # nrows, ncols, index
     ax.set_facecolor('black')
