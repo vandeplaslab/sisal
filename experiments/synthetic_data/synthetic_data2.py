@@ -182,7 +182,21 @@ def plot_spatial_separate(mask, image_circle, image_triangle, image_square):
         ax[i+1].set_xticks([])
         ax[i+1].set_yticks([])
         #plt.savefig('plots/synthetic_data/complete/coefficients_{}.png'.format(image_title[i]),bbox_inches='tight',dpi=300)
-    
+def plot_synthetic():
+    print('##### = ', eps_scale, coeff_loc,coeff_scale)
+    image_circle, image_triangle,image_square, mask , overlapp= create_image_new(eps_scale=eps_scale,coeff_scale=coeff_scale,coeff_loc=coeff_loc)
+    image_total = image_circle+image_triangle+image_square
+
+    in_size = 212
+    batch_size = 32
+
+    print('#### Plot of spatial image')
+    #plot_spatial(image_total,mask)
+    plot_spatial_separate(mask, image_circle, image_triangle, image_square)
+
+    print('#### Plot spectra signals')
+    spectrums, spectrum_names = create_spectrum(in_size)
+    plot_spectral_separate(spectrums,spectrum_names)
 
 # images = [circle, triangle,square]
 # def plot_spatial_separate_past(eps_scale=eps_scale , coeff_scale=coeff_scale , coeff_loc=coeff_loc ):
@@ -203,6 +217,7 @@ def plot_spatial_separate(mask, image_circle, image_triangle, image_square):
 
     #ax[1].title.set_text(r"$\epsilon \sim N(0,{}^2), c,t,s \sim N({},{}^2)$".format(eps_scale,coeff_loc,coeff_scale))
     #plt.savefig('plots/synthetic_data/separate_coeff.png',bbox_inches='tight',dpi=300)
+
 
 def plot_spatial_separate2d(eps_scale=eps_scale , coeff_scale=coeff_scale , coeff_loc=coeff_loc ):
     _, ax = plt.subplots(nrows = 2,figsize=(10, 10))
@@ -367,6 +382,6 @@ def return_synthetic_data():
     #COMPUTE the SNR named alpha which is the norm of the spectrum signal
     SNR= np.linalg.norm(data,axis=1)/(eps_scale**2*data.shape[1])
 
-    return centroids , SNR , mask.flatten()
+    return centroids , SNR , mask.flatten(), mask_to_name_synthetic()
 
 

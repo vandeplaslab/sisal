@@ -76,10 +76,10 @@ def compute_latent_synthetic(loader,model):
                 prev+=batch 
                 
         
-        with open('saved_data/saved_latent.npy', 'wb') as f:
-            np.save(f, latent)
-            np.save(f, vars)
-            np.save(f,label)
+        # with open('saved_data/saved_latent.npy', 'wb') as f:
+        #     np.save(f, latent)
+        #     np.save(f, vars)
+        #     np.save(f,label)
         print('End Compute latent')
         
         n_zeros_rows = ~np.all(latent == 0, axis=1)

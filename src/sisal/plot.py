@@ -5,7 +5,10 @@ import matplotlib.pyplot as plt
 from matplotlib import path as m_path
 from matplotlib.patches import Ellipse
 import matplotlib.colors as colors_mat
-from utils import reparametrize,compute_latent,compute_latent_mean,sample_batch,emp_std,compute_loss,compute_latent_synthetic
+import sys  
+sys.path.insert(0, "/".join(sys.path[0].split("/")[0:-2])+('/src'))
+from sisal.utils import reparametrize,compute_latent,compute_latent_mean,sample_batch,emp_std,compute_loss,compute_latent_synthetic
+sys.path.insert(0, "/".join(sys.path[0].split("/")[0:-2])+('/experiments/synthetic_data'))
 import imageio
 from scipy.stats import norm
 import torch.nn.functional as F
@@ -16,13 +19,13 @@ from itertools import groupby
 from scipy import stats
 import statsmodels.api as sm
 #from synthetic_data import full_index_normalized_data_synthetic
-from synthetic_data import plot_all
-from mouse_pup import full_index_normalized_data_mouse_pup,index_to_image_pos_mouse,load_IMS_mouse_pup,get_image_shape_mouse_pup
+from synthetic_data2 import plot_all
+#from mouse_pup import full_index_normalized_data_mouse_pup,index_to_image_pos_mouse,load_IMS_mouse_pup,get_image_shape_mouse_pup
 from matplotlib.patches import Polygon
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from matplotlib.ticker import MultipleLocator
 import matplotlib.gridspec as gridspec
-from two_points_data import full_small_index_normalized
+#from two_points_data import full_small_index_normalized
 from pathlib import Path
 import pandas as pd
 import pickle
@@ -35,8 +38,8 @@ import skimage.io as io
 from scipy.ndimage import rotate
 from matplotlib.transforms import Affine2D
 import matplotlib.patches as mpatches
-from kernel_adapted import kernel_adapated,plot_kernel_adapted
-import matplotlib.transforms as mtransforms
+from sisal.kernel_adapted import kernel_adapated,plot_kernel_adapted
+#import matplotlib.transforms as mtransforms
 import matplotlib.patheffects as patheffects
 
 
@@ -246,11 +249,24 @@ def limit_latent_space( model ,train_loader):
 
 
 class  Plot():
-    def __init__(self,model,train_loader,test_loader,threshold_collapse) -> None:
-        self.model = model
+    def __init__(self,PATH,device,train_loader,test_loader,full_loader) -> None:
+        #self.model = model
         self.train_loader = train_loader
         self.test_loader = test_loader 
-        self.std_threshold = threshold_collapse
+        self.loader = full_loader
+        #self.std_threshold = threshold_collapse
+
+        device = torch.device(device)
+        model = torch.load(PATH, map_location=torch.device('cpu'))
+        full_latent,vars,label, coeff = compute_latent_synthetic(self.loader,model)
+
+        self.full_latent = full_latent
+        self.vars = vars
+        self.label = label
+        self.coeff = coeff
+
+
+
         #self.device = torch.device(args.device)
     
     def plot_latent_dim(self, loader, title):
@@ -390,15 +406,13 @@ class  Plot():
             ax.legend(markerscale=70,loc='upper right', fontsize="20",)
 
 
-    # p subsample proportion
-    def plot_latent_dim_with_var(self, full_latent, vars, label, mask_to_name,title,p=0.5):
-        # Specify the font to use
-        #rc('font', **{'family': 'serif', 'serif': ['cmr10']})
-        #rc('text', usetex=True)
+    # p subsample proportion of full _latent
+    def plot_latent_dim_with_var(self, mask_to_name,p=0.5):
+        
 
         print('### Label = ')
-        print(np.unique(label))
-        n_sample = int(full_latent.shape[0]*p)
+        print(np.unique(self.label))
+        n_sample = int(self.full_latent.shape[0]*p)
         print('Using {} samples'.format(n_sample))
         
         # target_ROI_arr = ['Glomerulus', 'Proximal_Tubule', 'Distal_Tubule', 'Collecting_Duct', 'Thick_Ascending_Limb']
@@ -412,11 +426,11 @@ class  Plot():
         #Subsample a proportion p_loader of the points        
         if p != 1 :
             r = np.random.RandomState(random_state_synthetic)
-            sub_index = r.choice(full_latent.shape[0], int(full_latent.shape[0]*p), replace=False)
+            sub_index = r.choice(self.full_latent.shape[0], int(self.full_latent.shape[0]*p), replace=False)
             #sub_index = np.random.choice(full_latent.shape[0], int(full_latent.shape[0]*p), replace=False)
-            full_latent = full_latent[sub_index]
-            label = label[sub_index]
-            vars = vars[sub_index]
+            full_latent = self.full_latent[sub_index]
+            label = self.label[sub_index]
+            vars = self.vars[sub_index]
         
         ## Colored version
         #_, ax = plt.subplots()
@@ -454,7 +468,7 @@ class  Plot():
         #plt.savefig('plots/2d_reduction/kidney/all_data/kidney1_31/p_{}_sample_{}_colored.png'.format(p,n_sample), bbox_inches='tight',dpi=300)
         #plt.savefig('plots/2d_reduction/kidney/all_data/kidney1_35/p_{}_sample_{}_colored.png'.format(p,n_sample), bbox_inches='tight',dpi=300)
         # V6
-        plt.savefig('plots/2d_reduction/kidney/all_data/kidney1_35/p_{}_sample_{}_colored.png'.format(p,n_sample), bbox_inches='tight',dpi=300)
+        #plt.savefig('plots/2d_reduction/kidney/all_data/kidney1_35/p_{}_sample_{}_colored.png'.format(p,n_sample), bbox_inches='tight',dpi=300)
 
 
 
@@ -493,9 +507,9 @@ class  Plot():
         #.reshape(n_sample,-1)
         label_temp = label[idx1]
         self.scatter_with_covar(ax,full_latent_temp[0,:].reshape(1,-1),vars_temp[0,:].reshape(1,-1),np.array([label_temp[0]]), col_dict,mask_to_name)
-        plt.savefig('plots/2d_reduction/kidney/all_data/kidney1_35/one_sample_black_white.png', bbox_inches='tight',dpi=300)
+        #plt.savefig('plots/2d_reduction/kidney/all_data/kidney1_35/one_sample_black_white.png', bbox_inches='tight',dpi=300)
         self.scatter_with_covar(ax,full_latent_temp,vars_temp,label_temp, col_dict,mask_to_name)
-        plt.savefig('plots/2d_reduction/kidney/all_data/kidney1_35/two_samples_black_white.png', bbox_inches='tight',dpi=300)
+        #plt.savefig('plots/2d_reduction/kidney/all_data/kidney1_35/two_samples_black_white.png', bbox_inches='tight',dpi=300)
         ########
         ########
         
