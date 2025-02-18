@@ -259,15 +259,12 @@ class  Plot():
         device = torch.device(device)
         model = torch.load(PATH, map_location=torch.device('cpu'))
         full_latent,vars,label, coeff = compute_latent_synthetic(self.loader,model)
-
+        
         self.full_latent = full_latent
         self.vars = vars
         self.label = label
         self.coeff = coeff
 
-
-
-        #self.device = torch.device(args.device)
     
     def plot_latent_dim(self, loader, title):
         new_colors = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728',
@@ -408,8 +405,6 @@ class  Plot():
 
     # p subsample proportion of full _latent
     def plot_latent_dim_with_var(self, mask_to_name,p=0.5):
-        
-
         print('### Label = ')
         print(np.unique(self.label))
         n_sample = int(self.full_latent.shape[0]*p)
@@ -422,7 +417,7 @@ class  Plot():
         # new_colors = ['#1f77b4', 'darkorange', 'green', 'firebrick', 'black', 'darkmagenta']
         # col_dict = dict(zip(range(len(new_colors)),new_colors))
         
-        col_dict = self.color_dict()
+        col_dict = self.color_dict(n_col = len(np.unique(self.label)))
         #Subsample a proportion p_loader of the points        
         if p != 1 :
             r = np.random.RandomState(random_state_synthetic)
@@ -453,7 +448,8 @@ class  Plot():
 
         #  
         #ax.set_facecolor('black')
-        
+        print('col_dict = ', col_dict)
+        print('mask_to_name = ', mask_to_name)
         self.scatter_with_covar(ax,full_latent[:,1:],vars,label, col_dict,mask_to_name)
         #plt.title('2 dim latent space Beta {}'.format(title))
 
@@ -1217,7 +1213,7 @@ class  Plot():
 
 
 
-    def color_dict(self):
+    def color_dict(self,n_col=6):
         new_colors = ['#1f77b4', 'darkorange', 'green', 'firebrick', 'black', 'darkmagenta']
         #new_colors = ['darkgoldenrod', 'darkorange', 'green', 'firebrick', 'black', 'darkmagenta']
         # n_col = 4  
@@ -1225,9 +1221,9 @@ class  Plot():
         
         ## For SYNTHETIC DATA
         # n_col = 2**3  
-        # cmap_spa = 'cmr.pride'
-        # new_colors = cmr.take_cmap_colors(cmap_spa, n_col, return_fmt='hex')
-        # new_colors[-1] = [0.0, 0.5, 1.0, 1.0]  # Set the last color to blue
+        cmap_spa = 'cmr.pride'
+        new_colors = cmr.take_cmap_colors(cmap_spa, n_col, return_fmt='hex')
+        new_colors[-1] = [0.0, 0.5, 1.0, 1.0]  # Set the last color to blue
 
         
 

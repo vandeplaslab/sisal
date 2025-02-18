@@ -183,10 +183,9 @@ def plot_spatial_separate(mask, image_circle, image_triangle, image_square):
         ax[i+1].set_yticks([])
         #plt.savefig('plots/synthetic_data/complete/coefficients_{}.png'.format(image_title[i]),bbox_inches='tight',dpi=300)
 def plot_synthetic():
-    print('##### = ', eps_scale, coeff_loc,coeff_scale)
     image_circle, image_triangle,image_square, mask , overlapp= create_image_new(eps_scale=eps_scale,coeff_scale=coeff_scale,coeff_loc=coeff_loc)
     image_total = image_circle+image_triangle+image_square
-
+    print('data_shape = ', image_total.shape)
     in_size = 212
     batch_size = 32
 
