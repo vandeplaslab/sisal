@@ -2,11 +2,11 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 import cmasher as cmr
-import torch
-import pandas as pd
-from sklearn.preprocessing import StandardScaler
-from sklearn.decomposition import PCA
-import matplotlib.colors as mcolors
+#import torch
+#import pandas as pd
+#from sklearn.preprocessing import StandardScaler
+#from sklearn.decomposition import PCA
+#import matplotlib.colors as mcolors
 from matplotlib.colors import LinearSegmentedColormap
 
 
@@ -182,7 +182,20 @@ def plot_spatial_separate(mask, image_circle, image_triangle, image_square):
         ax[i+1].set_xticks([])
         ax[i+1].set_yticks([])
         #plt.savefig('plots/synthetic_data/complete/coefficients_{}.png'.format(image_title[i]),bbox_inches='tight',dpi=300)
-    
+def plot_synthetic():
+    image_circle, image_triangle,image_square, mask , overlapp= create_image_new(eps_scale=eps_scale,coeff_scale=coeff_scale,coeff_loc=coeff_loc)
+    image_total = image_circle+image_triangle+image_square
+    print('data_shape = ', image_total.shape)
+    in_size = 212
+    batch_size = 32
+
+    print('#### Plot of spatial image')
+    #plot_spatial(image_total,mask)
+    plot_spatial_separate(mask, image_circle, image_triangle, image_square)
+
+    print('#### Plot spectra signals')
+    spectrums, spectrum_names = create_spectrum(in_size)
+    plot_spectral_separate(spectrums,spectrum_names)
 
 # images = [circle, triangle,square]
 # def plot_spatial_separate_past(eps_scale=eps_scale , coeff_scale=coeff_scale , coeff_loc=coeff_loc ):
@@ -203,6 +216,7 @@ def plot_spatial_separate(mask, image_circle, image_triangle, image_square):
 
     #ax[1].title.set_text(r"$\epsilon \sim N(0,{}^2), c,t,s \sim N({},{}^2)$".format(eps_scale,coeff_loc,coeff_scale))
     #plt.savefig('plots/synthetic_data/separate_coeff.png',bbox_inches='tight',dpi=300)
+
 
 def plot_spatial_separate2d(eps_scale=eps_scale , coeff_scale=coeff_scale , coeff_loc=coeff_loc ):
     _, ax = plt.subplots(nrows = 2,figsize=(10, 10))
@@ -285,193 +299,8 @@ def plot_spectral_separate(s_col,spectrum_names):
         x_pos = np.arange(z_size)
        
         _, stemlines1, _ = axs[i].stem(x_pos, s, col_dict[index_col[i]], markerfmt=' ')
-        plt.setp(stemlines1, 'linewidth', 3)
-        #plt.savefig('plots/synthetic_data/complete/spectral_pattern_{}.png'.format(short_to_long[names[i]]),bbox_inches='tight',dpi=300)
-
-    # ax[1].title.set_text('Triangle')
-    # _, stemlines2, _ = ax[1].stem(x_pos+0.3, s2, col_dict[2], markerfmt=' ')
-    # plt.setp(stemlines2, 'linewidth',3)
-    #plt.savefig('plots/synthetic_data/spectral_pattern.png',bbox_inches='tight',dpi=300)
-
-def return_synthetic_data():
-    in_size = 212
-    batch_size = 32
-
-    image_circle, image_triangle,image_square, mask ,overlapp = create_image_new(eps_scale=eps_scale,coeff_scale=coeff_scale,coeff_loc=coeff_loc)
-    
-    s, _ = create_spectrum(in_size)
-
-
-    C = overlapp.flatten().reshape(-1,1)
-    data = C*( np.outer(image_circle.flatten(),s[0])+np.outer(image_triangle.flatten(),s[1]) + np.outer(image_square.flatten(),s[2]))
-    # Add noise
-
-    r = np.random.RandomState(8970)
-    centroids = data + r.normal(scale = eps_scale,size=data.shape)
-    return centroids
-
-
-
-
-def return_normalized_data_synthetic():
-    print('### Using Synthetic data')
-    
-    in_size = 212
-    batch_size = 32
-
-    image_circle, image_triangle,image_square, mask ,overlapp = create_image_new(eps_scale=eps_scale,coeff_scale=coeff_scale,coeff_loc=coeff_loc)
-    
-    s, _ = create_spectrum(in_size)
-
-
-    C = overlapp.flatten().reshape(-1,1)
-    data = C*( np.outer(image_circle.flatten(),s[0])+np.outer(image_triangle.flatten(),s[1]) + np.outer(image_square.flatten(),s[2]))
-    # Add noise
-
-    r = np.random.RandomState(8970)
-    centroids = data + r.normal(scale = eps_scale,size=data.shape)
-    df = pd.DataFrame(centroids)
-    df['mask'] = mask.flatten()
-    df['index'] = range(centroids.shape[0])
-
-
-    train = df.sample(frac=0.8,random_state=42)
-    test = df.drop(train.index)
-
-
-    val_train = train.drop(['index','mask'], axis=1)
-    val_test = test.drop(['index','mask'], axis=1)
-
-    train = pd.DataFrame(train)
-    test = pd.DataFrame(test)
-    
-    scaler = StandardScaler()
-    scaler.fit(val_train)
-    val_train = scaler.transform(val_train)
-    val_test = scaler.transform(val_test)
-    
-
-    val=[val_train,val_test]
-    d = [train,test]
-    loaders = []
-    for i in range(len(val)) :
-        v = val[i]
-        df = d[i]
-        v = np.array(v,dtype = 'float32')   [:,np.newaxis,:]
-        mask = np.array(df['mask'])
-        loader = torch.utils.data.DataLoader([ [v[j],mask[j]] for j in range(v.shape[0])], 
-                                            shuffle=False, 
-                                            num_workers=3,
-                                            batch_size=batch_size,
-                                            pin_memory=True,
-                                            drop_last=True)
-        loaders.append(loader)
-    #(Train loader, test loader)
-    return loaders
-
-
-def full_index_normalized_data_synthetic():
-    #print('### Using Synthetic data')
-    z_size = 212
-
-    image_circle, image_triangle,image_square, mask ,overlapp = create_image_new(eps_scale=eps_scale,coeff_scale=coeff_scale,coeff_loc=coeff_loc)
-    s, spectrum_names = create_spectrum(z_size)
-    
-    C = overlapp.flatten().reshape(-1,1)
-    data = C * (np.outer(image_circle.flatten(),s[0])+np.outer(image_triangle.flatten(),s[1])+ np.outer(image_square.flatten(),s[2]))
-    # Add noise
-
-    r = np.random.RandomState(8970)
-    centroids = data + r.normal(scale = eps_scale,size=data.shape)
-
-    batch_size = 32
-
-    df = pd.DataFrame(centroids)
-    df['mask']= mask.flatten() 
-    df['index'] = range(centroids.shape[0])
-    df['alpha'] = C * (image_circle.flatten() + image_triangle.flatten() + image_square.flatten()).reshape(-1,1)
-
-    ### COMPUTE the SNR named alpha which is the norm of the spectrum signal
-    for i in range(3):
-        print('norm s{} =  '.format(i), np.linalg.norm(s[i]))
-
-    print('### data.shape[1] = ', data.shape[1])
-    df['alpha'] = np.linalg.norm(data,axis=1)/(eps_scale**2*data.shape[1])
-    print('#### df[alapha] = ' , df['alpha'])
-
-
-
-    
-    mask_to_name = mask_to_name_synthetic()   #mask_to_name : Dictionary from the coding Label to it's ROI name
-    train = df.sample(frac=0.8,random_state=42)
-    val_train = train.drop(['index','mask','alpha'], axis=1)
-    
-    scaler = StandardScaler()
-    scaler.fit(val_train)
-    val = df.drop(['index','mask','alpha'], axis=1)
-    val = scaler.transform(val)
-    
-    val = np.array(val,dtype = 'float32')[:,np.newaxis,:]
-    index = np.array(df['index'])
-    mask = np.array(df['mask'])
-    alpha = np.array(df['alpha']) 
-
-    loader = torch.utils.data.DataLoader([ [val[i], mask[i], alpha[i], index[i]] for i in range(val.shape[0])], 
-                                        shuffle=False, 
-                                        batch_size=batch_size,
-                                        pin_memory=True,
-                                        drop_last=True)
-    
-    return loader, mask_to_name
-
-def return_normalized_unloader_data_synthetic():
-    z_size = 212
-
-    image_circle, image_triangle,image_square, mask ,overlapp = create_image_new(eps_scale=eps_scale,coeff_scale=coeff_scale,coeff_loc=coeff_loc)
-    s, spectrum_names = create_spectrum(z_size)
-    
-    C = overlapp.flatten().reshape(-1,1)
-    data = C * (np.outer(image_circle.flatten(),s[0])+np.outer(image_triangle.flatten(),s[1])+ np.outer(image_square.flatten(),s[2]))
-    # Add noise
-
-    r = np.random.RandomState(8970)
-    centroids = data + r.normal(scale = eps_scale,size=data.shape)
-    
-    #batch_size = 32
-
-    df = pd.DataFrame(centroids)
-    df['mask']= mask.flatten() 
-    df['index'] = range(centroids.shape[0])
-    df['alpha'] = C * (image_circle.flatten() + image_triangle.flatten() + image_square.flatten()).reshape(-1,1)
-
-    df['alpha'] = np.linalg.norm(data,axis=1)/(eps_scale**2*data.shape[1])
-
-    
-    mask_to_name = mask_to_name_synthetic()   #mask_to_name : Dictionary from the coding Label to it's ROI name
-    train = df.sample(frac=0.8,random_state=42)
-    test = df.drop(train.index)
-    
-    val_train = train.drop(['index','mask','alpha'], axis=1)
-    val_test = test.drop(['index','mask','alpha'], axis=1)
-
-    train = pd.DataFrame(train)
-    test = pd.DataFrame(test)
-    
-    scaler = StandardScaler()
-    scaler.fit(val_train)
-    
-    val_train = scaler.transform(val_train)
-    val_test = scaler.transform(val_test)
-
-    total = scaler.transform(df.drop(['index','mask','alpha'],axis = 1))
-    label_total = df['mask']
-    alpha = df['alpha']
-
-    return val_train, val_test,total, label_total,alpha,mask_to_name
-    
 
 def mask_to_name_synthetic():
-    #ordered_names = ['noise', 'circle', 'triangle','square', 'mixed']
     names = np.array(['s','t','c'])
     ordered_value = []
     order_name = []
@@ -502,14 +331,9 @@ def plot_all():
     r2 = np.random.RandomState(4174)
     s2 = r2.uniform(0, 1000, z_size)
     #plot_spectral(s1,s2)
-
     
-    #data = np.outer(image_circle.flatten(),s1)+np.outer(image_triangle.flatten(),s2)
-    # Add noise
-    #centroids = data + np.random.normal(scale = eps_scale,size=data.shape)
-
     i = 10
-    PATH = 'plots/synthetic_data/spectral_cut/' 
+    #PATH = 'plots/synthetic_data/spectral_cut/' 
     for i in range(0,z_size,z_size//10 ):
         temp_c = s1[i]*image_circle
         temp_t = s2[i]*image_triangle
@@ -519,38 +343,7 @@ def plot_all():
         full_title = 'full_z{}.pdf'.format(i)
         plt.figure(full_title)
         plt.imshow(temp_f)
-        plt.savefig(PATH + full_title,bbox_inches='tight')
         plt.close()
-
-    
-def plot_pca():
-    # Convert loader dataset to a 2d array for PCA
-    loader,mask_to_name = full_index_normalized_data_synthetic()
-    dataset = loader.dataset
-    n = len(dataset) ## Number of observation
-    m = dataset[0][0].shape[1] ## Number of mz bins
-    data = np.zeros((n,m))
-    label = np.zeros(n)
-    for i in range(data.shape[0]):
-        data[i,:] = dataset[i][0]
-        label[i] = dataset[i][1]
-
-    pca = PCA(n_components=2)
-    X_r = pca.fit(data).transform(data)
-
-    n_col = 2**3  
-    new_colors = cmr.take_cmap_colors(cmap_spa, n_col, return_fmt='hex')
-    col_dict = dict(zip(range(len(new_colors)),new_colors))
-    
-    fig = plt.figure()
-    ax = fig.add_subplot(1, 1, 1) # nrows, ncols, index
-    ax.set_facecolor('black')
-    #plt.rcParams['figure.facecolor'] = 'black'
-    for c in range(n_col):
-        ax.scatter(X_r[label==c,0],X_r[label==c,1],color = col_dict[c], alpha=0.8, label = mask_to_name[c])
-    ax.legend(loc="best", shadow=False, scatterpoints=1)
-    plt.title("PCA of synthetic data")
-    plt.savefig('plots/synthetic_data/pca.png')
 
 def create_spectrum(in_size):
     r1 = np.random.RandomState(1920)
@@ -568,19 +361,26 @@ def create_spectrum(in_size):
     spectrum_names =['circle','triangle','square']
     return [s1,s2,s3],spectrum_names
 
-
-def plot_synthetic():
-    print('##### = ', eps_scale, coeff_loc,coeff_scale)
-    image_circle, image_triangle,image_square, mask , overlapp= create_image_new(eps_scale=eps_scale,coeff_scale=coeff_scale,coeff_loc=coeff_loc)
-    image_total = image_circle+image_triangle+image_square
-
+def return_synthetic_data():
     in_size = 212
     batch_size = 32
 
-    print('#### Plot of spatial image')
-    #plot_spatial(image_total,mask)
-    plot_spatial_separate(mask, image_circle, image_triangle, image_square)
+    image_circle, image_triangle,image_square, mask ,overlapp = create_image_new(eps_scale=eps_scale,coeff_scale=coeff_scale,coeff_loc=coeff_loc)
+    
+    s, _ = create_spectrum(in_size)
 
-    print('#### Plot spectra signals')
-    spectrums, spectrum_names = create_spectrum(in_size)
-    plot_spectral_separate(spectrums,spectrum_names)
+
+    C = overlapp.flatten().reshape(-1,1)
+    data = C*( np.outer(image_circle.flatten(),s[0])+np.outer(image_triangle.flatten(),s[1]) + np.outer(image_square.flatten(),s[2]))
+    # Add noise
+
+    r = np.random.RandomState(8970)
+    centroids = data + r.normal(scale = eps_scale,size=data.shape)
+    
+    #The alpha value (SNR) of the spectrum
+    #COMPUTE the SNR named alpha which is the norm of the spectrum signal
+    SNR= np.linalg.norm(data,axis=1)/(eps_scale**2*data.shape[1])
+
+    return centroids , SNR , mask.flatten(), mask_to_name_synthetic()
+
+

@@ -19,7 +19,7 @@ from itertools import groupby
 from scipy import stats
 import statsmodels.api as sm
 #from synthetic_data import full_index_normalized_data_synthetic
-from synthetic_data2 import plot_all
+from synthetic_data import plot_all
 #from mouse_pup import full_index_normalized_data_mouse_pup,index_to_image_pos_mouse,load_IMS_mouse_pup,get_image_shape_mouse_pup
 from matplotlib.patches import Polygon
 from mpl_toolkits.axes_grid1 import make_axes_locatable
@@ -422,7 +422,6 @@ class  Plot():
         if p != 1 :
             r = np.random.RandomState(random_state_synthetic)
             sub_index = r.choice(self.full_latent.shape[0], int(self.full_latent.shape[0]*p), replace=False)
-            #sub_index = np.random.choice(full_latent.shape[0], int(full_latent.shape[0]*p), replace=False)
             full_latent = self.full_latent[sub_index]
             label = self.label[sub_index]
             vars = self.vars[sub_index]
@@ -446,10 +445,7 @@ class  Plot():
         # plt.xlim((-3.2, 3.2))
         # plt.ylim((-4.4, 2))
 
-        #  
         #ax.set_facecolor('black')
-        print('col_dict = ', col_dict)
-        print('mask_to_name = ', mask_to_name)
         self.scatter_with_covar(ax,full_latent[:,1:],vars,label, col_dict,mask_to_name)
         #plt.title('2 dim latent space Beta {}'.format(title))
 
@@ -588,22 +584,23 @@ class  Plot():
         plt.savefig('plots/2d_reduction/3d/subsample_{}_b{}.png'.format(p,title), bbox_inches='tight')
         plt.close()
 
-    def plot_latent_dim_coeff(self, full_latent, vars, alpha_label):
+    def plot_latent_dim_coeff(self, alpha_label):
         
         #p = 0.008
         #p= 0.05
         #p=0.2
         p=0.7
-        print('Using {} samples'.format(int(full_latent.shape[0]*p)))
+        n = self.full_latent.shape[0]
+        print('Using {} samples'.format(int(n*p)))
         #col_dict = self.color_dict()
         
         if p != 1 :
             r = np.random.RandomState(random_state_synthetic)
-            sub_index = r.choice(full_latent.shape[0], int(full_latent.shape[0]*p), replace=False)
+            sub_index = r.choice(n, int(n*p), replace=False)
             #sub_index = np.random.choice(full_latent.shape[0], int(full_latent.shape[0]*p), replace=False)
-            full_latent = full_latent[sub_index]
+            full_latent = self.full_latent[sub_index]
             alpha_label = alpha_label[sub_index]
-            vars = vars[sub_index]
+            #vars = self.vars[sub_index]
         
         fig, ax = plt.subplots(figsize = (10,10))
         ax.tick_params(axis='x', labelsize=20)
@@ -623,7 +620,7 @@ class  Plot():
         plt.xlim((-3.2, 3.2))
         plt.ylim((-4.4, 2))
         
-        sc = ax.scatter(x = full_latent[:,1], y= full_latent[:,2] ,c = alpha_label ,alpha=0.5, cmap='viridis' )
+        sc = ax.scatter(x = self.full_latent[:,1], y= self.full_latent[:,2] ,c = alpha_label ,alpha=0.5, cmap='viridis' )
         # for i in range(vars.shape[0]):
         #     width, height = 2 * nstd * np.sqrt(z_var)
         # e=Ellipse(xy=z_mean, width=width, height=height,fill=False,
@@ -646,13 +643,13 @@ class  Plot():
 
         #plt.title('Scaling values in latent space')
         #plt.savefig('plots/synthetic_data/latent_dim_coefficients_subsample_{}.pdf'.format(p), bbox_inches='tight')
-        plt.savefig('plots/2d_reduction/synthetic/coefficients/latent26_coefficients_subsample_{}.png'.format(p), bbox_inches='tight',dpi=300)
+        #plt.savefig('plots/2d_reduction/synthetic/coefficients/latent26_coefficients_subsample_{}.png'.format(p), bbox_inches='tight',dpi=300)
         plt.close()
 
         fig, ax = plt.subplots(figsize = (10,10))
         sc = ax.scatter(x = full_latent[:,1], y= full_latent[:,2] ,c = alpha_label ,alpha=0.5, cmap='viridis' )
         plt.axis('off')
-        plt.savefig('plots/2d_reduction/synthetic/coefficients/transparant_latent26_coefficients_subsample_{}.png'.format(p), bbox_inches='tight',dpi=300 , transparent=True)
+        #plt.savefig('plots/2d_reduction/synthetic/coefficients/transparant_latent26_coefficients_subsample_{}.png'.format(p), bbox_inches='tight',dpi=300 , transparent=True)
 
 
 ###########################################################################################################

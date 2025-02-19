@@ -56,25 +56,24 @@ def compute_latent(loader,model):
 
 def compute_latent_synthetic(loader,model): 
         print('Compute Latent') 
-        latent = np.zeros((len(loader.dataset),1+model.z_dim))  
-        vars = np.zeros((len(loader.dataset),model.z_dim))  
-        label = np.zeros(len(loader.dataset))
-        coeff = np.zeros(len(loader.dataset))
+        n = len(loader.dataset)
+        print('n loader = ', n )
+        latent = np.zeros((n,1+model.z_dim))  
+        vars = np.zeros((n,model.z_dim))  
+        label = np.zeros(n)
+        coeff = np.zeros(n)
         with torch.no_grad():
             prev = 0
             for x,l , alpha ,i in loader :
-            #for i, (x,l)  in enumerate(loader) :
-                #x =x.to(device)
                 z_mean,  z_logvar =model.forward(x)
                 batch = z_mean.size(0)
                 latent[prev:prev+batch,0] = i
-                #print('# i = ', i)
                 latent[prev:prev+batch,1:] = z_mean.detach().numpy()
                 vars[prev:prev+batch,:] = np.exp(z_logvar.detach().numpy())
                 label[prev:prev+batch] = l
                 coeff[prev:prev+batch] = alpha
                 prev+=batch 
-                
+        print('latent shape = ' , latent.shape)        
         
         # with open('saved_data/saved_latent.npy', 'wb') as f:
         #     np.save(f, latent)

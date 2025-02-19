@@ -15,7 +15,6 @@ import pickle as pkl
 #EPOCHS = 5
 #best_vloss = 1_000_000.
 
-
 # def reparametrize(mu, logvar):
 #         std = logvar.div(2).exp()
 #         eps = Variable(std.data.new(std.size()).normal_())
@@ -23,25 +22,17 @@ import pickle as pkl
 
 class Solver():
     def __init__(self,args, in_size) :
-        print('### -2')
-        timestamp = datetime.now().strftime('%d%m%Y_%H%M%S')
-        print('## -1')
-        self.writer = SummaryWriter('runs/fashion_trainer_{}'.format(timestamp))
+        # timestamp = datetime.now().strftime('%d%m%Y_%H%M%S')
+        # self.writer = SummaryWriter('runs/fashion_trainer_{}'.format(timestamp))
+        
         self.device = torch.device(args.device)
         self.z_dim = args.z_dim
-        print('## 1')
         self.model = beta_vae(args.z_dim,in_size).to(self.device)
         self.save_epochs = args.save_model_epochs
-        #if args.synthetic : 
-        #    self.model = beta_vae_synthetic(args.z_dim).float()
         self.EPOCHS = args.epochs
-        print('## 2')
         self.train_bool = args.train
         self.PATH = 'model/model_weights.pth' ## Path to save the model
         self.beta = args.beta
-        #self.evaluate_dis_metric = args.evaluate_dis_metric
-        #self.std_threshold = args.threshold_collapse
-        print('## 3')
         self.save_loss = args.save_loss
         
 
@@ -67,7 +58,7 @@ class Solver():
     def loss(self, beta,x, z_mean , z_logvar, decoder_mean):
         return self.reconstruction_loss(x,decoder_mean) + beta*self.KL(z_mean,z_logvar)
     
-    def train_one_epoch(self,epoch_index,dataloader,tb_writer):
+    def train_one_epoch(self,epoch_index,dataloader):
         c=0
         optim = Adam(self.model.parameters(), lr=0.001, weight_decay=0.0001)
         
@@ -100,9 +91,9 @@ class Solver():
                 if i % 1000 == 999:
                     last_loss = running_loss / 1000 # loss per batch
                     print('  batch {} loss: {}'.format(i + 1, last_loss))
-                    tb_x = epoch_index * len(dataloader) + i + 1
-                    tb_writer.add_scalar('Loss/train', last_loss, tb_x)
-                    tb_writer.flush()
+                    # tb_x = epoch_index * len(dataloader) + i + 1
+                    # tb_writer.add_scalar('Loss/train', last_loss, tb_x)
+                    # tb_writer.flush()
                     running_loss = 0.
 
                     ###############
@@ -117,16 +108,6 @@ class Solver():
                         torch.save(self.model, 'model/model_weight_n_{}.pth'.format(epoch_index*3+c))
                         c+=1
 
-                    
-                    # if self.evaluate_dis_metric :
-                    #     with torch.no_grad():
-                    #         full_latent= compute_latent_mean(dataloader,self.model)
-                    #         full_std = emp_std(full_latent)
-                    #         z_min, z_max = limit_latent_space_precomp(full_latent)
-                    #         dis_metric = metric_disentangling(self.model,z_min,z_max,full_std)    
-                    #         tb_writer.add_scalar('Metric/disentangling', dis_metric, tb_x)
-                    #         tb_writer.add_scalar('Metric/reconstruction', running_recons, tb_x)
-                    # running_recons=0.
         return last_loss , last_recons, last_kl
 
     def evaluate_loss(self,loader) : 
@@ -174,7 +155,7 @@ class Solver():
                 
                 print('EPOCH {}:'.format(epoch + 1))
                 self.model.train(True)
-                avg_loss, avg_recons, avg_KL= self.train_one_epoch(epoch,train_loader,self.writer)
+                avg_loss, avg_recons, avg_KL= self.train_one_epoch(epoch,train_loader)
                 if self.save_epochs :
                     torch.save(self.model, 'model/model_weight_n_{}.pth'.format(epoch*3+2))
                 # Evaluation on the validation set
@@ -209,14 +190,6 @@ class Solver():
                 else :
                     early_stop +=1
 
-                # if self.evaluate_dis_metric :
-                #         with torch.no_grad():
-                #             full_latent= compute_latent_mean(train_loader,self.model)
-                #             full_std = emp_std(full_latent)
-                #             z_min, z_max = limit_latent_space_precomp(full_latent)
-                #             dis_metric, _ = metric_disentangling(self.model,z_min,z_max,full_std,self.std_threshold)
-                #             tb_x = epoch * len(train_loader)
-                #             self.writer.add_scalar('Metric/disentangling', dis_metric, tb_x)
 
             
         if self.save_loss :
