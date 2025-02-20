@@ -23,14 +23,18 @@ def sample_batch(m,var):
 ## Return the associate latent mean, variance and label
 def compute_latent(loader,model): 
         print('Compute Latent') 
-        latent = np.zeros((len(loader.dataset),1+model.z_dim))  
-        vars = np.zeros((len(loader.dataset),model.z_dim))  
-        label = np.zeros(len(loader.dataset))
+        n = len(loader.dataset)
+        latent = np.zeros((n,1+model.z_dim))  
+        vars = np.zeros((n,model.z_dim))  
+        label = np.zeros(n)
+        alpha = np.zeros(n)
         with torch.no_grad():
             prev = 0
-            for x,l , i in loader :
-            #for i, (x,l)  in enumerate(loader) :
-                #x =x.to(device)
+            for x, l, *rest, i in loader:
+                if len(rest) == 1:  # Means alpha is included
+                    alpha_val = rest[0]
+                else:
+                    alpha_val = None  # Default value if alpha is missing
                 z_mean,  z_logvar =model.forward(x)
                 batch = z_mean.size(0)
                 latent[prev:prev+batch,0] = i
@@ -38,7 +42,20 @@ def compute_latent(loader,model):
                 latent[prev:prev+batch,1:] = z_mean.detach().numpy()
                 vars[prev:prev+batch,:] = np.exp(z_logvar.detach().numpy())
                 label[prev:prev+batch] = l
+                alpha[prev:prev+batch] = alpha_val
                 prev+=batch 
+
+            # for x,l , i in loader :
+            # #for i, (x,l)  in enumerate(loader) :
+            #     #x =x.to(device)
+            #     z_mean,  z_logvar =model.forward(x)
+            #     batch = z_mean.size(0)
+            #     latent[prev:prev+batch,0] = i
+            #     #print('# i = ', i)
+            #     latent[prev:prev+batch,1:] = z_mean.detach().numpy()
+            #     vars[prev:prev+batch,:] = np.exp(z_logvar.detach().numpy())
+            #     label[prev:prev+batch] = l
+            #     prev+=batch 
                 
         
         n_zeros_rows = ~np.all(latent == 0, axis=1)
@@ -46,13 +63,13 @@ def compute_latent(loader,model):
         vars = vars[n_zeros_rows]
         label = label[n_zeros_rows]
 
-        with open('saved_data/saved_latent.npy', 'wb') as f:
-            np.save(f, latent)
-            np.save(f, vars)
-            np.save(f,label)
-        print('End Compute latent')
+        # with open('saved_data/saved_latent.npy', 'wb') as f:
+        #     np.save(f, latent)
+        #     np.save(f, vars)
+        #     np.save(f,label)
+        # print('End Compute latent')
 
-        return latent, vars,label
+        return latent, vars,label,alpha
 
 def compute_latent_synthetic(loader,model): 
         print('Compute Latent') 
@@ -369,9 +386,9 @@ def normalize_train_test_full_loader(centroids: np.ndarray, mask:np.ndarray, bat
     loaders = []
     for i in range(len(val)) :
         v = val[i]
-        df = d[i]
+        df_temp = d[i]
         v = np.array(v,dtype = 'float32')   [:,np.newaxis,:]
-        mask = np.array(df['mask'])
+        mask = np.array(df_temp['mask'])
         loader = torch.utils.data.DataLoader([ [v[j],mask[j]] for j in range(v.shape[0])], 
                                             shuffle=False, 
                                             num_workers=3,

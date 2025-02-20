@@ -258,12 +258,13 @@ class  Plot():
 
         device = torch.device(device)
         model = torch.load(PATH, map_location=torch.device('cpu'))
-        full_latent,vars,label, coeff = compute_latent_synthetic(self.loader,model)
+        full_latent,vars,label, alpha = compute_latent(self.loader,model)
+        #compute_latent_synthetic(self.loader,model)
         
         self.full_latent = full_latent
         self.vars = vars
         self.label = label
-        self.coeff = coeff
+        self.alpha = alpha
 
     
     def plot_latent_dim(self, loader, title):
@@ -374,7 +375,7 @@ class  Plot():
         # return Ellipse(xy=z_mean, width=width, height=height,fill=False,
         #             color=color,alpha=0.5, **kwargs)
         return Ellipse(xy=z_mean, width=width, height=height,fill=False,
-                     color=color,alpha=1,linewidth= 6, **kwargs)
+                     color=color,alpha=1,linewidth= 1, **kwargs)
         
 
 
@@ -405,8 +406,6 @@ class  Plot():
 
     # p subsample proportion of full _latent
     def plot_latent_dim_with_var(self, mask_to_name,p=0.5):
-        print('### Label = ')
-        print(np.unique(self.label))
         n_sample = int(self.full_latent.shape[0]*p)
         print('Using {} samples'.format(n_sample))
         
@@ -427,7 +426,6 @@ class  Plot():
             vars = self.vars[sub_index]
         
         ## Colored version
-        #_, ax = plt.subplots()
         _, ax = plt.subplots(figsize=(10, 10))
         plt.xlim((-4, 4))
         plt.ylim((-4, 4))
@@ -472,9 +470,6 @@ class  Plot():
         ## Black and White version version
         #_, ax = plt.subplots()
         _, ax = plt.subplots(figsize=(10, 10))
-        # plt.xlim((-4, 4))
-        # plt.ylim((-4, 4)) 
-
         plt.xlim((-4.5, 4.5)) 
         plt.ylim((-4.5, 4.5))
 
@@ -584,62 +579,41 @@ class  Plot():
         plt.savefig('plots/2d_reduction/3d/subsample_{}_b{}.png'.format(p,title), bbox_inches='tight')
         plt.close()
 
-    def plot_latent_dim_coeff(self, alpha_label):
+    def plot_latent_dim_coeff(self):
         
-        #p = 0.008
-        #p= 0.05
-        #p=0.2
         p=0.7
         n = self.full_latent.shape[0]
-        print('Using {} samples'.format(int(n*p)))
-        #col_dict = self.color_dict()
-        
+        alpha_label = self.alpha
+        full_latent = self.full_latent
+
         if p != 1 :
             r = np.random.RandomState(random_state_synthetic)
             sub_index = r.choice(n, int(n*p), replace=False)
-            #sub_index = np.random.choice(full_latent.shape[0], int(full_latent.shape[0]*p), replace=False)
             full_latent = self.full_latent[sub_index]
             alpha_label = alpha_label[sub_index]
-            #vars = self.vars[sub_index]
         
         fig, ax = plt.subplots(figsize = (10,10))
         ax.tick_params(axis='x', labelsize=20)
         ax.tick_params(axis='y', labelsize=20)
         
-        # plt.xlim((-4, 4))
-        # plt.ylim((-4, 4))
-        # plt.xlim((-3.5, 5))
-        # plt.ylim((-5.5, 1.5))
-        # plt.xlim((-3.5, 5))
-        # plt.ylim((-5.7, 1.3))
-        # plt.xlim((-3.5, 5))
-        # plt.ylim((-5.7, 1.6))
-        #Synthetic : 
-        # plt.xlim((-3.5, 3.5))
-        # plt.ylim((-4.5, 2.5))
-        plt.xlim((-3.2, 3.2))
-        plt.ylim((-4.4, 2))
+        x = full_latent[:,1]
+        y= full_latent[:,2]
+
+        plt.xlim((np.min(x),np.max(x)))
+        plt.ylim((np.min(y), np.max(y)))
         
-        sc = ax.scatter(x = self.full_latent[:,1], y= self.full_latent[:,2] ,c = alpha_label ,alpha=0.5, cmap='viridis' )
-        # for i in range(vars.shape[0]):
-        #     width, height = 2 * nstd * np.sqrt(z_var)
-        # e=Ellipse(xy=z_mean, width=width, height=height,fill=False,
-        #             color=color,alpha=0.5, **kwargs)
-            
-        # ax.add_artist(e)
-        
-        # ax.legend(markerscale=50)
-        #plt.colorbar(sc)
+        sc = ax.scatter(x = x, y= 
+                        y ,c = alpha_label ,alpha=0.5, cmap='viridis' )
         
         pos = ax.get_position().get_points().flatten()
-        #ax_cbar = fig.add_axes([pos[0]+0.04, 0.86, (pos[2]-pos[0])*0.9, 0.02])
-        #ax_cbar = fig.add_axes([pos[0]+0.04, 0.856, (pos[2]-pos[0])*0.9, 0.02])
-        ax_cbar = fig.add_axes([pos[0]+0.04, 0.84, (pos[2]-pos[0])*0.9, 0.02])
+        # ax_cbar = fig.add_axes([pos[0]+0.04, 0.86, (pos[2]-pos[0])*0.9, 0.02])
+        # ax_cbar = fig.add_axes([pos[0]+0.04, 0.856, (pos[2]-pos[0])*0.9, 0.02])
+        ax_cbar = fig.add_axes([pos[0]+0.04, 0.84, (pos[2]-pos[0])*0.8, 0.02])
         cb= plt.colorbar(sc, cax=ax_cbar, orientation='horizontal',aspect=20)
         cb.ax.tick_params(labelsize=20)
         
         #Put ticks on top of the bar
-        #ax_cbar.xaxis.set_ticks_position("top")
+        ax_cbar.xaxis.set_ticks_position("top")
 
         #plt.title('Scaling values in latent space')
         #plt.savefig('plots/synthetic_data/latent_dim_coefficients_subsample_{}.pdf'.format(p), bbox_inches='tight')
@@ -648,7 +622,7 @@ class  Plot():
 
         fig, ax = plt.subplots(figsize = (10,10))
         sc = ax.scatter(x = full_latent[:,1], y= full_latent[:,2] ,c = alpha_label ,alpha=0.5, cmap='viridis' )
-        plt.axis('off')
+        #plt.axis('off')
         #plt.savefig('plots/2d_reduction/synthetic/coefficients/transparant_latent26_coefficients_subsample_{}.png'.format(p), bbox_inches='tight',dpi=300 , transparent=True)
 
 
