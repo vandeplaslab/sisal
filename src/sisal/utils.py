@@ -406,7 +406,7 @@ def normalize_train_test_full_loader(centroids: np.ndarray, mask:np.ndarray, bat
     mask = np.array(df['mask'])
 
     if alpha is None:
-        full_loader = loader = torch.utils.data.DataLoader([ [val[i], mask[i], alpha[i], index[i]] for i in range(val.shape[0])], 
+        full_loader = loader = torch.utils.data.DataLoader([ [val[i], mask[i], index[i]] for i in range(val.shape[0])], 
                                             shuffle=False, 
                                             batch_size=batch_size,
                                             pin_memory=True,

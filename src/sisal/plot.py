@@ -19,7 +19,7 @@ from itertools import groupby
 from scipy import stats
 import statsmodels.api as sm
 #from synthetic_data import full_index_normalized_data_synthetic
-from synthetic_data import plot_all
+#from synthetic_data import plot_all
 #from mouse_pup import full_index_normalized_data_mouse_pup,index_to_image_pos_mouse,load_IMS_mouse_pup,get_image_shape_mouse_pup
 from matplotlib.patches import Polygon
 from mpl_toolkits.axes_grid1 import make_axes_locatable
@@ -259,6 +259,7 @@ class  Plot():
         device = torch.device(device)
         model = torch.load(PATH, map_location=torch.device('cpu'))
         full_latent,vars,label, alpha = compute_latent(self.loader,model)
+
         #compute_latent_synthetic(self.loader,model)
         
         self.full_latent = full_latent
