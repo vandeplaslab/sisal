@@ -359,10 +359,34 @@ def normalize_train_test_full_loader(centroids: np.ndarray, mask:np.ndarray, bat
         - It prepares PyTorch DataLoaders for both sets.
         - A full DataLoader is created with additional fields: mask, alpha, and index.
     """
+    normalize_train_test_full_loader_given_index(centroids,range(centroids.shape[0]),mask,batch_size,alpha)
+
+def normalize_train_test_full_loader_given_index(centroids: np.ndarray,pixel_index : np.ndarray, mask:np.ndarray, batch_size: int = 32 , alpha=None):
+    """
+    Normalize the given data and return the train, test, and full data loaders.
+
+    Args:
+        centroids (np.ndarray): A NumPy array of shape (n_points, n_dim) representing the data points.
+        pixel_index (np.ndarray): A NumPy array of shape (n_points, n_dim) representing the a chosen index (in our case : pixel where the IMS was acquired)
+        masks (np.ndarray) : A NumPy array of shape (n_points) representing the mask (if unknown set all to 1)
+        batch_size (int, optional): The batch size for the DataLoader. Defaults to 32.
+        alpha (np.ndarray) : A NumPy array of shape (n_points) representing the alpha (SNR) value if it is known
+
+    Returns:
+            - A list with two DataLoaders (train and test).
+            - A full DataLoader including indices of the datapoints
+
+    Notes:
+        - This function standardizes the features using StandardScaler.
+        - It splits the data into 80% training and 20% testing.
+        - It prepares PyTorch DataLoaders for both sets.
+        - A full DataLoader is created with additional fields: mask, alpha, and index.
+    """
 
     df = pd.DataFrame(centroids)
     df['mask'] = mask
-    df['index'] = range(centroids.shape[0])
+    df['index'] = pixel_index
+    
 
 
     train = df.sample(frac=0.8,random_state=42)
@@ -419,7 +443,3 @@ def normalize_train_test_full_loader(centroids: np.ndarray, mask:np.ndarray, bat
                                             drop_last=True)
     
     return loaders[0],loaders[1], full_loader 
-
-
-
-

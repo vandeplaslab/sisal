@@ -338,7 +338,7 @@ class  Plot():
         #frame1 = plt.gca()
         #frame1.axes.xaxis.set_ticklabels([])
         #frame1.axes.yaxis.set_ticklabels([])
-        plt.savefig('plots/posterior_collapse/posterior_collapse.pdf')
+        #plt.savefig('plots/posterior_collapse/posterior_collapse.pdf')
         
     
     def posterior_collapse_qqplot(self,loader,betas,z_dim = 10):
@@ -417,7 +417,8 @@ class  Plot():
         # new_colors = ['#1f77b4', 'darkorange', 'green', 'firebrick', 'black', 'darkmagenta']
         # col_dict = dict(zip(range(len(new_colors)),new_colors))
         
-        col_dict = self.color_dict(n_col = len(np.unique(self.label)))
+        col_dict = self.color_dict(n_col = len(np.unique(self.label))+1)
+        #col_dict = self.color_dict(n_col = int(np.max(np.unique(self.label))))
         #Subsample a proportion p_loader of the points        
         if p != 1 :
             r = np.random.RandomState(random_state_synthetic)
@@ -428,104 +429,33 @@ class  Plot():
         
         ## Colored version
         _, ax = plt.subplots(figsize=(10, 10))
-        plt.xlim((-4, 4))
-        plt.ylim((-4, 4))
 
         plt.xlim((-4.5, 4.5))
         plt.ylim((-4.5, 4.5))
-        #ax.tick_params(axis='x', labelsize=20)
-        #ax.tick_params(axis='y', labelsize=20)
         
-        #LABELS
-        #ax.set_xlabel(r'$z_1$',fontsize="40")
-        #ax.set_ylabel(r'$z_2$',fontsize="40", rotation=0,ha='right')
-        
-        #Synthetic
-        # plt.xlim((-3.2, 3.2))
-        # plt.ylim((-4.4, 2))
-
-        #ax.set_facecolor('black')
         self.scatter_with_covar(ax,full_latent[:,1:],vars,label, col_dict,mask_to_name)
-        #plt.title('2 dim latent space Beta {}'.format(title))
 
-    
-        ## Kidney    
-        #plt.savefig('plots/2d_reduction/kidney/kidney6/p{}_sample_{}_colored.png'.format(p,n_sample), bbox_inches='tight',dpi=300)
-        #plt.savefig('plots/2d_reduction/kidney/kidney6/b0_p{}_sample_{}_colored.png'.format(p,n_sample), bbox_inches='tight',dpi=300)
-        
-        ##All data
-        #plt.savefig('plots/2d_reduction/kidney/subsample_{}_colored.png'.format(p), bbox_inches='tight',dpi=300)
-        #plt.savefig('plots/2d_reduction/kidney/all_data/kidney1_41/p_{}_sample_{}_colored.png'.format(p,n_sample), bbox_inches='tight',dpi=300)
-        #plt.savefig('plots/2d_reduction/kidney/all_data/kidney1_31/p_{}_sample_{}_colored.png'.format(p,n_sample), bbox_inches='tight',dpi=300)
-        #plt.savefig('plots/2d_reduction/kidney/all_data/kidney1_35/p_{}_sample_{}_colored.png'.format(p,n_sample), bbox_inches='tight',dpi=300)
-        # V6
-        #plt.savefig('plots/2d_reduction/kidney/all_data/kidney1_35/p_{}_sample_{}_colored.png'.format(p,n_sample), bbox_inches='tight',dpi=300)
-
-
-
-
-        ## Synthetic
-        # plt.savefig('plots/2d_reduction/synthetic/subsample_{}_colored.png'.format(p), bbox_inches='tight')
-        #plt.savefig('plots/2d_reduction/synthetic/complete/v26b4_subsample_{}_colored.png'.format(p), bbox_inches='tight',dpi=300)
-
-        ## Black and White version version
-        #_, ax = plt.subplots()
         _, ax = plt.subplots(figsize=(10, 10))
         plt.xlim((-4.5, 4.5)) 
         plt.ylim((-4.5, 4.5))
-
-        #Synthetic : 
-        # plt.xlim((-3.2, 3.2))
-        # plt.ylim((-4.4, 2))
-
-
-
-        #ax.set_xlabel(r'$z_1$', **csfont,fontsize="40")
-        #ax.set_ylabel(r'$z_2$', **csfont,fontsize="40", rotation=0,ha='right')
         
         col_dict={0:'blue'}
-        ######################## Black and white
-        # Selecting a random index
-        ########
-        ######## BLOCK TO remove
-        n_sample = 2
-        idx1 = np.random.choice(full_latent.shape[0],size=n_sample)
-        full_latent_temp = full_latent[idx1,1:].reshape(n_sample,-1)
-        vars_temp = vars[idx1,:]
-        #.reshape(n_sample,-1)
-        label_temp = label[idx1]
-        self.scatter_with_covar(ax,full_latent_temp[0,:].reshape(1,-1),vars_temp[0,:].reshape(1,-1),np.array([label_temp[0]]), col_dict,mask_to_name)
-        #plt.savefig('plots/2d_reduction/kidney/all_data/kidney1_35/one_sample_black_white.png', bbox_inches='tight',dpi=300)
-        self.scatter_with_covar(ax,full_latent_temp,vars_temp,label_temp, col_dict,mask_to_name)
-        #plt.savefig('plots/2d_reduction/kidney/all_data/kidney1_35/two_samples_black_white.png', bbox_inches='tight',dpi=300)
-        ########
-        ########
         
+        # ########
+        # ########
+        # n_sample = 2
+        # idx1 = np.random.choice(full_latent.shape[0],size=n_sample)
+        # full_latent_temp = full_latent[idx1,1:].reshape(n_sample,-1)
+        # vars_temp = vars[idx1,:]
+        # #.reshape(n_sample,-1)
+        # label_temp = label[idx1]
+        # self.scatter_with_covar(ax,full_latent_temp[0,:].reshape(1,-1),vars_temp[0,:].reshape(1,-1),np.array([label_temp[0]]), col_dict,mask_to_name)
+        # #plt.savefig('plots/2d_reduction/kidney/all_data/kidney1_35/one_sample_black_white.png', bbox_inches='tight',dpi=300)
+        # self.scatter_with_covar(ax,full_latent_temp,vars_temp,label_temp, col_dict,mask_to_name)
+        # #plt.savefig('plots/2d_reduction/kidney/all_data/kidney1_35/two_samples_black_white.png', bbox_inches='tight',dpi=300)
+        # ########
+        # ########
         self.scatter_with_covar(ax,full_latent[:,1:],vars,label, col_dict,mask_to_name)
-        ########################
-        #plt.title('2 dim latent space Beta {}'.format(title))
-
-        #### KIDNEY
-        #plt.savefig('plots/2d_reduction/kidney/kidney6/p{}_sample_{}_black_white.png'.format(p,n_sample), bbox_inches='tight',dpi=300)
-        #plt.savefig('plots/2d_reduction/kidney/kidney6/b0_p{}_sample_{}_black_white.png'.format(p,n_sample), bbox_inches='tight',dpi=300)
-        
-        ### Synthetic
-        #plt.savefig('plots/2d_reduction/synthetic/complete/v26b4_subsample_{}_black_white.png'.format(p), bbox_inches='tight',dpi=300)
-        
-        ### ALL DATA
-        #plt.savefig('plots/2d_reduction/kidney/all_data/kidney1_41/p_{}_sample_{}_black_white.png'.format(p,n_sample), bbox_inches='tight',dpi=300)
-        # plt.savefig('plots/2d_reduction/kidney/kidney6/subsample_{}_black_white.pdf'.format(p), bbox_inches='tight')
-        #plt.savefig('plots/2d_reduction/kidney/all_data/kidney2_5/v7_b1_subsample_{}_black_white.png'.format(p), bbox_inches='tight',dpi=300)
-        #plt.savefig('plots/2d_reduction/kidney/all_data/kidney2_5/v1_subsample_{}_black_white.pdf'.format(p), bbox_inches='tight')
-        #plt.savefig('plots/2d_reduction/kidney/all_data/kidney1_31/p_{}_sample_{}_black_white.png'.format(p,n_sample), bbox_inches='tight',dpi=300)
-        #plt.savefig('plots/2d_reduction/kidney/all_data/kidney1_35/p_{}_sample_{}_black_white.png'.format(p,n_sample), bbox_inches='tight',dpi=300)
-        # V6
-        #plt.savefig('plots/2d_reduction/kidney/all_data/kidney1_35/p_{}_sample_{}_black_white.png'.format(p,n_sample), bbox_inches='tight',dpi=300)
-        #plt.savefig('plots/2d_reduction/kidney/all_data/kidney1_35/one_sample_black_white.png', bbox_inches='tight',dpi=300)
-
-
-        
-        #plt.savefig('plots/2d_reduction/kidney/subsample_{}_epoch_{}.png'.format(p,title), bbox_inches='tight')
         
         plt.close()
 
@@ -577,7 +507,7 @@ class  Plot():
         plt.title('3 dim latent space {}'.format(title))
         
         #plt.savefig('plots/2d_reduction/3d/pdfs/subsample_{}_b{}.pdf'.format(p,title), bbox_inches='tight')
-        plt.savefig('plots/2d_reduction/3d/subsample_{}_b{}.png'.format(p,title), bbox_inches='tight')
+        #plt.savefig('plots/2d_reduction/3d/subsample_{}_b{}.png'.format(p,title), bbox_inches='tight')
         plt.close()
 
     def plot_latent_dim_coeff(self):
@@ -809,23 +739,19 @@ class  Plot():
                     fps = 5)         # optional: frames per second    
     
     #Make {n_points} different latent traversal between pol_limits1 and pol_limits 2
-    def latent_traversal_legs(self,full_latent,vars,label,mask_to_name,pol_limits1, pol_limits2):
+    def latent_traversal_legs(self,mask_to_name,pol_limits1, pol_limits2):
+
         n_points=  50
         p1 = m_path.Path(pol_limits1) 
         p2 = m_path.Path(pol_limits2) 
-        flag1 = p1.contains_points(full_latent[:,1:])
-        flag2 = p2.contains_points(full_latent[:,1:])
+        flag1 = p1.contains_points(self.full_latent[:,1:])
+        flag2 = p2.contains_points(self.full_latent[:,1:])
 
         n_steps = 15
-        # print('### min 1 = ', np.min(full_latent[flag2,1]))
-        # print('### max 2 = ',np.max(full_latent[flag1,1]) )
-        t = np.abs( np.max(full_latent[flag2,1]) - np.min(full_latent[flag1,1]))/ n_steps
-        # print('### t = ', t)
+        t = np.abs( np.max(self.full_latent[flag2,1]) - np.min(self.full_latent[flag1,1]))/ n_steps
         
         # Plot the ellipses of latent space
         _, ax = plt.subplots(figsize=(10,10))
-        # plt.xlim((-4, 4))
-        # plt.ylim((-4, 4)) 
         plt.xlim((-4.5, 4.5))
         plt.ylim((-4.5, 4.5)) 
 
@@ -837,26 +763,23 @@ class  Plot():
         #VAN 1_35
         poly_colors = ['#a30000','black']
 
-
-        #poly_colors = ['#a30000','black']
-        self.scatter_with_covar(ax,full_latent[:,1:],vars,label,c_dict,mask_to_name)
+        self.scatter_with_covar(ax,self.full_latent[:,1:],self.vars,self.label,c_dict,mask_to_name)
         poly1 = Polygon(pol_limits1,alpha = 0.5,ec = "gray",fc = poly_colors[0],visible = True)
         ax.add_patch(poly1)
         poly2 = Polygon(pol_limits2,alpha = 0.5, ec = "gray",fc= poly_colors[1],visible = True)
         ax.add_patch(poly2)
         
         random_start = np.random.choice(np.sum(flag1), size=n_points, replace=False)
-        z_start = full_latent[flag1,1: ][random_start]
+        z_start = self.full_latent[flag1,1: ][random_start]
         
         p_to_steps = {}
         for i in range(n_points):
-            print('### Point ', i)
-            print('z_start = ', z_start[i,:])
+
             ax.plot(z_start[i,0],z_start[i,1] , ".")
             z_curr = z_start[i,:]
             #for _ in range(n_steps) :
             j=0
-            path = []
+            #path = []
             latent_val = [z_curr]
             while not p2.contains_point(z_curr) and j < n_steps :
                 plt.quiver(z_curr[0], z_curr[1], t, 0, scale_units='xy', angles='xy', scale=1, alpha=0.8)
@@ -864,30 +787,23 @@ class  Plot():
                 latent_val.append(z_curr)
                 j+=1
             p_to_steps[i] = len(latent_val)
-            #plt.title('Latent traversal sublegs proximal tubule')
-            ## KIDNEY
-            #plt.savefig('plots/latent_traversal/polygons/latent_traversal.png',bbox_inches='tight',dpi=300)
-            ## VAN1_41
-            #plt.savefig('plots/latent_traversal/polygons/latent_traversal1_41.png',bbox_inches='tight',dpi=300)
-            ## VAN1_31
-            #plt.savefig('plots/latent_traversal/polygons/latent_traversal1_31.png',bbox_inches='tight',dpi=300)
-            ## VAN1_35
-            plt.savefig('plots/latent_traversal/polygons/latent_traversal1_35.png',bbox_inches='tight',dpi=300)
+            
             
             if p2.contains_point(z_curr) :
                 print('Gif of current traversal')
 
-                self.latent_traversal_app_gif(np.array(latent_val),np.zeros(len(latent_val)),0,i, index_missing=True)
+                #self.latent_traversal_app_gif(np.array(latent_val),np.zeros(len(latent_val)),0,i, index_missing=True)
+        
         #min_d = np.argmin(full_latent[flag,2])
 
         #### REMOVE van1_41 for base data
         #### For van1_41 : 'saved_data/van1_41/points_to_n_steps.pkl'
         #### ALSO CHANGE PATH IN latent_traversal_app_gif --> create_frame_app --> 
-        with open('saved_data/van1_35/points_to_n_steps.pkl', 'wb') as fp:
-            pickle.dump(p_to_steps,fp)
+        # with open('saved_data/van1_35/points_to_n_steps.pkl', 'wb') as fp:
+        #     pickle.dump(p_to_steps,fp)
         return 0  
 
-    def variance_latent_traversal(self):
+    def variance_latent_traversal(self,mzs):
         n_traversal = 50
         p_to_n = {0:6,1:6,2:7,3:7,4:4} #Dictionary from points to number of steps in traversal
         
@@ -921,7 +837,6 @@ class  Plot():
                     p_steps[i,:] = np.load(f)
             combined_p.append(p_steps)
         
-        _, mzs = dat.load_centroids(data_dir)
         
         ## Subset of x_ticks that are going to be ploted
         subset =  np.arange(0,combined_p[0].shape[1],step=4)
@@ -937,7 +852,7 @@ class  Plot():
             ax.set_xticklabels(mzs[subset], rotation = 45,ha='right')
             ax.set_xlabel('$m/z$', fontsize=10)
             ax.set_ylabel('Variance', fontsize = 10)
-            plt.savefig('plots/latent_traversal/variance/traversal_p{}.png'.format(i), bbox_inches='tight',dpi=300)
+            #plt.savefig('plots/latent_traversal/variance/traversal_p{}.png'.format(i), bbox_inches='tight',dpi=300)
         
         ## For interpretation note that some traversal increase the value and some decrease it
         sign_traversal = np.sum(sign_traversal,axis = 0) >=0
@@ -962,7 +877,7 @@ class  Plot():
         ### Remove the legend for 50 points
         ax.get_legend().remove()
         ###
-        plt.savefig('plots/latent_traversal/variance/traversal_combined.png', bbox_inches='tight',dpi=300)
+        #plt.savefig('plots/latent_traversal/variance/traversal_combined.png', bbox_inches='tight',dpi=300)
 
 
         ## Csv file for the variance sorted by order 
@@ -979,20 +894,6 @@ class  Plot():
             by="variance",
             ascending=False
         )
-
-        # f, ax = plt.subplots(figsize=(15,5))
-        # subset = np.arange(0,212,step=4)
-        # ax.set_xticks(subset)
-        # ax.set_xticklabels(np.array(col_data['mzs'])[subset], rotation = 45,ha='right')
-        # ax.set_xlabel('$m/z$', fontsize=10)
-        # ax.set_ylabel('Variance', fontsize = 10)
-        # color_bars = {1 : '#050533', 0:'#E34234',} #Darkblue, red
-        # label_bars = {1: 'increasing', 0:'decreasing'}
-        
-        # for l in np.unique(col_data['increase']) :
-        #     ind = col_data['increase']==l
-        #     ax.scatter(np.arange(len(sum_var))[ind],col_data['variance'][ind], c=color_bars[l], label=label_bars[l])    
-        # ax.legend()
 
         f, ax = plt.subplots(figsize=(15,5))
 
@@ -1055,7 +956,7 @@ class  Plot():
         mark_inset(ax,axins,loc1=1,loc2=3,)
         ax.legend(prop = { "size": 15 })
         #plt.savefig('plots/latent_traversal/variance/ordered_variance_traversal.png', bbox_inches='tight',dpi=300)  
-        plt.savefig('plots/latent_traversal/variance/ordered_variance_traversal1_35.png', bbox_inches='tight',dpi=300)  
+        #plt.savefig('plots/latent_traversal/variance/ordered_variance_traversal1_35.png', bbox_inches='tight',dpi=300)  
     
     ## index_missing = Boolean to indicate if latent_val contains the index in first column
     def latent_traversal_app_gif(self,latent_val,label,f_index,n, index_missing = False):
@@ -1309,14 +1210,14 @@ class  Plot():
             
 
 
-    def index_to_image_pos(self, image_shape, pixel_index):
-        reshape_pixel = dat.reshape_array(pixel_index,image_shape,pixel_index)
-        index_to_pos = dict()
-        for i in range(image_shape[0]):
-            for j in range(image_shape[1]):
-                if ~np.isnan(reshape_pixel[i,j]):
-                    index_to_pos[ reshape_pixel[i,j]] = np.array([i,j])
-        return index_to_pos
+    # def index_to_image_pos(self, image_shape, pixel_index):
+    #     reshape_pixel = dat.reshape_array(pixel_index,image_shape,pixel_index)
+    #     index_to_pos = dict()
+    #     for i in range(image_shape[0]):
+    #         for j in range(image_shape[1]):
+    #             if ~np.isnan(reshape_pixel[i,j]):
+    #                 index_to_pos[ reshape_pixel[i,j]] = np.array([i,j])
+    #     return index_to_pos
 
     def draw_latent_connections_on_image(self, fa , z_min , z_max, full_latent, loader, index = 151) :
         centroids, glomeruls_mask, pixel_index= dat.load() #original data
@@ -1486,6 +1387,32 @@ class  Plot():
             plt.imshow(dat.reshape_array(centroids[:, i] / norm, image_shape, pixel_index))
             plt.title(f"m/z {mzs[i]:.4f}",fontsize=20)
             plt.savefig("plots/spatial/mz_{}".format(i), bbox_inches='tight')
+
+    def plot_polygons_get_mask(self,ax,pol_limits,colors,index_to_pos,image_shape):
+        #n_poly = 5
+        masks = np.zeros(image_shape)
+        for i,pol_limit in enumerate(pol_limits):
+            print(i)
+            ## Polygones on top images
+            poly1 = Polygon(pol_limit,alpha = 0.5, ec = "gray", fc = colors[i],visible = True)
+            p = m_path.Path(pol_limit) 
+            ax.add_patch(poly1)
+            flag = p.contains_points(self.full_latent[:,1:])
+            index_mask = self.full_latent[:,0][flag]
+            ###### Selection for traversal
+            min_d = np.argmin(self.full_latent[flag,2])
+            max_d = np.argmax(self.full_latent[flag,2])
+
+            
+            pos = np.zeros((len(index_mask),2))
+            for j,ind in enumerate(index_mask) :
+                pos[j,:] = index_to_pos[ind]
+
+            ## Plot scatter image bottom right
+            print('colors {} = {}'.format(colors[i],i+1))
+            for j,ind in enumerate(index_mask) :
+                masks[int(pos[j,0]),int(pos[j,1])] = i+1
+        return masks
 
     def plot_carving_separate(self,full_latent,vars,label,mask_to_name,index = 151):
         # Specify the font to use

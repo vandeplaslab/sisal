@@ -81,6 +81,22 @@ def load_normalization_data(data_dir: Path, norm = "0-95% TIC"):
     # rescale the normalization by the median value of the norm
     return normalization / np.median(normalization)
 
+## Return the index associated to the image position
+def index_to_image_pos(data_dir:Path):
+    _, _, pixel_index = load_image_info(data_dir)
+    image_shape, _, _ = load_shape_norm_mzs()
+
+    # _, _,_, pixel_index= load(data_dir) #original data
+    # image_shape, _, _ = load_shape_norm_mzs()
+    
+    reshape_pixel = reshape_array(pixel_index,image_shape,pixel_index)
+    index_to_pos = dict()
+    for i in range(image_shape[0]):
+        for j in range(image_shape[1]):
+            if ~np.isnan(reshape_pixel[i,j]):
+                index_to_pos[ reshape_pixel[i,j]] = np.array([i,j])
+    return index_to_pos
+
 def load_centroids(data_dir: Path, name: str = "peaks_ppm=3.0_final_mzs_v1.h5"):
     """Load centroids data."""
     filename = data_dir / name
