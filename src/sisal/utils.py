@@ -359,7 +359,7 @@ def normalize_train_test_full_loader(centroids: np.ndarray, mask:np.ndarray, bat
         - It prepares PyTorch DataLoaders for both sets.
         - A full DataLoader is created with additional fields: mask, alpha, and index.
     """
-    normalize_train_test_full_loader_given_index(centroids,range(centroids.shape[0]),mask,batch_size,alpha)
+    return normalize_train_test_full_loader_given_index(centroids,np.array(range(centroids.shape[0])),mask,batch_size,alpha)
 
 def normalize_train_test_full_loader_given_index(centroids: np.ndarray,pixel_index : np.ndarray, mask:np.ndarray, batch_size: int = 32 , alpha=None):
     """
