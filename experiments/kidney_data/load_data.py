@@ -154,7 +154,7 @@ def load(data_dir:Path):
         _, _, pixel_index = load_image_info(data_dir)
         
         # load centroids data
-        centroids, _ = load_centroids(data_dir)
+        centroids, mzs = load_centroids(data_dir)
         # load mask data
         #glomeruls_mask = load_mask(data_dir)
         #glomeruls_mask = unshape_array(glomeruls_mask, pixel_index)
@@ -163,7 +163,7 @@ def load(data_dir:Path):
         mask , mask_to_name  = compute_mask(image_shape)
         mask = unshape_array(mask, pixel_index)
 
-        return centroids,mask,mask_to_name, pixel_index
+        return centroids,mask,mask_to_name, pixel_index,mzs
 def load_shape_norm_mzs():
     #data_dir = Path(r"data/VAN0046-LK-3-45-IMS_lipids_neg_roi=#1_mz=fix")
     # load image metadata

@@ -258,6 +258,7 @@ class  Plot():
 
         device = torch.device(device)
         model = torch.load(PATH, map_location=torch.device('cpu'))
+        self.model = model
         full_latent,vars,label, alpha = compute_latent(self.loader,model)
 
         #compute_latent_synthetic(self.loader,model)
@@ -773,6 +774,7 @@ class  Plot():
         z_start = self.full_latent[flag1,1: ][random_start]
         
         p_to_steps = {}
+        all_points = []
         for i in range(n_points):
 
             ax.plot(z_start[i,0],z_start[i,1] , ".")
@@ -786,11 +788,12 @@ class  Plot():
                 z_curr = z_curr + np.array([t,0])
                 latent_val.append(z_curr)
                 j+=1
+            all_points.append(latent_val)
             p_to_steps[i] = len(latent_val)
             
             
-            if p2.contains_point(z_curr) :
-                print('Gif of current traversal')
+            # if p2.contains_point(z_curr) :
+            #     print('Gif of current traversal')
 
                 #self.latent_traversal_app_gif(np.array(latent_val),np.zeros(len(latent_val)),0,i, index_missing=True)
         
@@ -801,43 +804,28 @@ class  Plot():
         #### ALSO CHANGE PATH IN latent_traversal_app_gif --> create_frame_app --> 
         # with open('saved_data/van1_35/points_to_n_steps.pkl', 'wb') as fp:
         #     pickle.dump(p_to_steps,fp)
-        return 0  
+        return all_points  
 
-    def variance_latent_traversal(self,mzs):
-        n_traversal = 50
-        p_to_n = {0:6,1:6,2:7,3:7,4:4} #Dictionary from points to number of steps in traversal
-        
-        data_dir = Path(r"/Users/pdelacour/Documents/PL_Ecole/beta_vae/data/VAN0046-LK-3-45-IMS_lipids_neg_roi=#1_mz=fix")
-        
-        
+    # all_points = list of latent traversal
+    def get_reconstruction(self,all_points,d) : 
 
-        data_dir2_5 = Path(r"data/negative/VAN0005-RK-2-5-IMS_lipids_neg_roi=#0_mz=fix")
-        data_dir1_31 =  Path(r"data/negative/VAN0042-RK-1-31-IMS_lipids_neg_roi=#1_mz=fix")
-        data_dir1_35 = Path(r"data/negative/VAN0049-RK-1-35-IMS_lipids_neg_roi=#1_mz=fix")
-        data_dir1_41 = Path(r"data/negative/VAN0063-RK-1-41-IMS_lipids_neg_roi=#1_mz=fix")
-        #path_points = 'saved_data/van1_41/points_to_n_steps.pkl'
-        path_points = 'saved_data/van1_35/points_to_n_steps.pkl'
+        all_reconstructed = []
+        for latent_val in all_points:
+            one_traversal = []
+            one_traversal = np.zeros((len(latent_val),d))
+            for t,l in enumerate(latent_val):
+                z=torch.Tensor(l)
+                with torch.no_grad():
+                    decoder_mean = self.model.decoder(z)[0,0,:]
+                    intensity = decoder_mean.detach().numpy()
+                one_traversal[t,:] = intensity
+            all_reconstructed.append(one_traversal)
+            
+        return all_reconstructed
+    def variance_latent_traversal(self,all_points,mzs,d):
+        combined_p = self.get_reconstruction(all_points,d)
 
-        data_dir = data_dir1_35
-        ##### ADD or REMOVE van1_41
-        ##### For kidney : 'saved_data/points_to_n_steps.pkl'
-        ##### For van1_41 : 'saved_data/van1_41/points_to_n_steps.pkl'
-        ##### For van1_31 : 'saved_data/van1_31/points_to_n_steps.pkl'
-        with open(path_points,'rb') as fp:
-            p_to_n = pickle.load(fp)
-        combined_p = []
-        for p in range(n_traversal):
-            n_points = p_to_n[p]
-            p_steps = np.zeros((n_points,212))
-            for i in range(n_points):
-                ### For Kidney : 'saved_data/traversal/reconstruct_p{}_step_{}.npy'
-                ### For VAN1_41 'saved_data/traversal/van1_41/reconstruct_p{}_step_{}.npy'
-                ### For VAN1_31 'saved_data/traversal/van1_31/reconstruct_p{}_step_{}.npy'
-                with open('saved_data/traversal/van1_35/reconstruct_p{}_step_{}.npy'.format(p,i),'rb') as f :
-                    p_steps[i,:] = np.load(f)
-            combined_p.append(p_steps)
-        
-        
+
         ## Subset of x_ticks that are going to be ploted
         subset =  np.arange(0,combined_p[0].shape[1],step=4)
         
@@ -846,40 +834,15 @@ class  Plot():
             plotdata = pd.DataFrame({'var':np.var(p_steps, axis = 0)},index =mzs)
             ## If this difference is positive it means the signal was increasing 
             sign_traversal[i,:] = ( p_steps[-1,:] - p_steps[0,:]>= 0)*2-1 ## Casting values to the range [-1,1] 
-            plt.figure()
-            ax = plotdata.plot(kind="bar",color= '#036512',figsize=(15,5))
-            ax.set_xticks(subset)
-            ax.set_xticklabels(mzs[subset], rotation = 45,ha='right')
-            ax.set_xlabel('$m/z$', fontsize=10)
-            ax.set_ylabel('Variance', fontsize = 10)
-            #plt.savefig('plots/latent_traversal/variance/traversal_p{}.png'.format(i), bbox_inches='tight',dpi=300)
         
         ## For interpretation note that some traversal increase the value and some decrease it
         sign_traversal = np.sum(sign_traversal,axis = 0) >=0
-        #print('### Sign traversal = ' , np.sum(sign_traversal,axis = 0))
         
         ## Plot of the stacked traversal
         data = {}
         for i,p_steps in enumerate(combined_p) : 
             data['var_{}'.format(i)] = np.var(p_steps,axis=  0)
-        plotdata = pd.DataFrame(data,index = mzs.astype(str))
-        plt.figure()
-        ax = plotdata.plot(kind="bar",stacked = True,figsize=(15,5),xticks=subset)
-        ax.set_xticks(subset)
-
-        #ticks_labels = mzs[subset]
-        ticks_labels = np.array([f'{mzs[i]:.2f}' for i in subset ])
-        ax.set_xticklabels(ticks_labels, rotation = 45,ha='right')
-        #### LEGEND
-        ax.set_xlabel('$m/z$', fontsize=10)
-        ax.set_ylabel('Variance', fontsize = 10)
         
-        ### Remove the legend for 50 points
-        ax.get_legend().remove()
-        ###
-        #plt.savefig('plots/latent_traversal/variance/traversal_combined.png', bbox_inches='tight',dpi=300)
-
-
         ## Csv file for the variance sorted by order 
         sum_var = np.sum(np.array(list(data.values())), axis = 0)
         col_data = pd.DataFrame({'mzs':mzs, 'variance':sum_var, 'increase':sign_traversal})
@@ -887,8 +850,6 @@ class  Plot():
             by="variance",
             ascending=False
         )
-        col_data.to_csv('saved_data/combined_variance1_35.csv', index=False)
-
         ## Plot of the variance in order : 
         col_data = col_data.sort_values(
             by="variance",
@@ -901,27 +862,22 @@ class  Plot():
         ax.set_xticks(subset)
         ticks_labels_mzs = np.array(col_data['mzs'])
         ticks_labels = np.array([f'{ticks_labels_mzs[i]:.3f}' for i in subset ])
-        for i in subset : 
-            print(f'#### {ticks_labels_mzs[i]} , {ticks_labels_mzs[i]:.3f}')
+        # for i in subset : 
+        #     print(f'#### {ticks_labels_mzs[i]} , {ticks_labels_mzs[i]:.3f}')
         ax.set_xticklabels(ticks_labels, rotation = 45,ha='right')
-        #ax.set_xticklabels(np.array(col_data['mzs'])[subset], rotation = 45,ha='right')
         
-        #ax.set_xlabel('$m/z$', fontsize=10)
-        #ax.set_ylabel('Variance', fontsize = 10)
         color_bars = {1 : '#050533', 0:'#E34234',} #Darkblue, red
         color_bars = {1 : '#fb6f92', 0:'#8d99ae',} #Darkblue, red
         color_bars = {1 : '#fe6d73', 0:'#17c3b2',} #Darkblue, red
         label_bars = {1: 'L-to-R increasing', 0:'L-to-R decreasing'}
 
-        #axins = ax.inset_axes((0.5, 0.6, 0.3, 0.3))
         axins = ax.inset_axes((0.3, 0.6, 0.4, 0.3))
         ax.tick_params(axis='y', labelsize=15)
         axins.tick_params(axis='y', labelsize=15)
         axins.tick_params(axis='x', labelsize=15)
 
         cutx = 14
-        eps=0.1
-        #axins.set_xlim(-eps,cutx-1+eps)
+        #eps=0.1
         X_global =  np.arange(len(sum_var))
         X1 =X_global[:cutx]
         X2 =X_global[cutx:]
@@ -933,7 +889,6 @@ class  Plot():
             ind = col_data_sub==l
             X = X1[ind]
             Y = Y1[ind]
-            #ax.scatter(X,Y, c=color_bars[l], label=label_bars[l])  
             ax.scatter(X,Y, c=color_bars[l])  
             axins.scatter(X,Y, c=color_bars[l], label=label_bars[l])    
 
@@ -955,8 +910,6 @@ class  Plot():
             
         mark_inset(ax,axins,loc1=1,loc2=3,)
         ax.legend(prop = { "size": 15 })
-        #plt.savefig('plots/latent_traversal/variance/ordered_variance_traversal.png', bbox_inches='tight',dpi=300)  
-        #plt.savefig('plots/latent_traversal/variance/ordered_variance_traversal1_35.png', bbox_inches='tight',dpi=300)  
     
     ## index_missing = Boolean to indicate if latent_val contains the index in first column
     def latent_traversal_app_gif(self,latent_val,label,f_index,n, index_missing = False):
@@ -1409,7 +1362,6 @@ class  Plot():
                 pos[j,:] = index_to_pos[ind]
 
             ## Plot scatter image bottom right
-            print('colors {} = {}'.format(colors[i],i+1))
             for j,ind in enumerate(index_mask) :
                 masks[int(pos[j,0]),int(pos[j,1])] = i+1
         return masks
