@@ -109,4 +109,7 @@ ENV/
 # IDE settings
 .vscode/
 
+# MacOS
+.DS_Store
+
 _version.py
