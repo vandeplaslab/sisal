@@ -38,6 +38,8 @@ dependencies = [
     "cmasher",
     "scipy",
     "pandas",
+    "scikit-image",
+    "scikit-learn",
 ]
 
 # extras
