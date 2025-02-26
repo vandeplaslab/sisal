@@ -36,7 +36,8 @@ dependencies = [
     "pytorch",
     "imageio",
     "cmasher",
-
+    "scipy",
+    "pandas",
 ]
 
 # extras
