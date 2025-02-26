@@ -345,16 +345,19 @@ def normalize_train_test_full_loader(centroids: np.ndarray, mask: np.ndarray, ba
     Normalize the given data and return the train, test, and full data loaders.
 
     Args:
+    ----
         centroids (np.ndarray): A NumPy array of shape (n_points, n_dim) representing the data points.
         masks (np.ndarray) : A NumPy array of shape (n_points) representing the mask (if unknown set all to 1)
         batch_size (int, optional): The batch size for the DataLoader. Defaults to 32.
         alpha (np.ndarray) : A NumPy array of shape (n_points) representing the alpha (SNR) value if it is known
 
     Returns:
+    -------
             - A list with two DataLoaders (train and test).
             - A full DataLoader including indices of the datapoints
 
     Notes:
+    -----
         - This function standardizes the features using StandardScaler.
         - It splits the data into 80% training and 20% testing.
         - It prepares PyTorch DataLoaders for both sets.
@@ -372,6 +375,7 @@ def normalize_train_test_full_loader_given_index(
     Normalize the given data and return the train, test, and full data loaders.
 
     Args:
+    ----
         centroids (np.ndarray): A NumPy array of shape (n_points, n_dim) representing the data points.
         pixel_index (np.ndarray): A NumPy array of shape (n_points, n_dim) representing the a chosen index (in our case : pixel where the IMS was acquired)
         masks (np.ndarray) : A NumPy array of shape (n_points) representing the mask (if unknown set all to 1)
@@ -379,10 +383,12 @@ def normalize_train_test_full_loader_given_index(
         alpha (np.ndarray) : A NumPy array of shape (n_points) representing the alpha (SNR) value if it is known
 
     Returns:
+    -------
             - A list with two DataLoaders (train and test).
             - A full DataLoader including indices of the datapoints
 
     Notes:
+    -----
         - This function standardizes the features using StandardScaler.
         - It splits the data into 80% training and 20% testing.
         - It prepares PyTorch DataLoaders for both sets.

@@ -1,5 +1,6 @@
+from __future__ import annotations
+
 import json
-import sys
 from itertools import groupby
 from pathlib import Path
 
@@ -22,13 +23,8 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 from mpl_toolkits.axes_grid1.inset_locator import mark_inset
 from scipy import stats
 
-sys.path.insert(0, "/".join(sys.path[0].split("/")[0:-2]) + ("/src"))
-from sisal.utils import compute_latent, compute_loss, reparametrize
-
-sys.path.insert(0, "/".join(sys.path[0].split("/")[0:-2]) + ("/experiments/synthetic_data"))
-
-
 from sisal.kernel_adapted import kernel_adapated, plot_kernel_adapted
+from sisal.utils import compute_latent, compute_loss, reparametrize
 
 mpl.rcParams.update(mpl.rcParamsDefault)
 # from two_points_data import full_small_index_normalized
@@ -54,7 +50,9 @@ mpl.rcParams.update(mpl.rcParamsDefault)
 
 
 class Plot:
-    def __init__(self, PATH, device, train_loader, test_loader, full_loader) -> None:
+    def __init__(
+        self, path: Path, device: str, train_loader, test_loader, full_loader, output_dir: Path | None = None
+    ) -> None:
         # self.model = model
         self.train_loader = train_loader
         self.test_loader = test_loader
@@ -62,16 +60,19 @@ class Plot:
         # self.std_threshold = threshold_collapse
 
         device = torch.device(device)
-        model = torch.load(PATH, map_location=torch.device("cpu"))
+        model = torch.load(path, map_location=torch.device("cpu"), weights_only=False)
         self.model = model
         full_latent, vars, label, alpha = compute_latent(self.loader, model)
-
-        # compute_latent_synthetic(self.loader,model)
 
         self.full_latent = full_latent
         self.vars = vars
         self.label = label
         self.alpha = alpha
+
+        # set output directory
+        if output_dir is None:
+            output_dir = Path(path).parent
+        self.output_dir = Path(output_dir)
 
     def plot_latent_dim(self, loader, title):
         new_colors = [
@@ -102,7 +103,7 @@ class Plot:
         color_train = np.array([c_dict[e] for e in label])
         plt.scatter(latent[:, 0], latent[:, 1], c=color_train)
         plt.title(f"2 dim latent space for {title} points")
-        plt.savefig(f"plots/2d_reduction/reduction_{title}_points.png")
+        plt.savefig(self.output_dir / f"plots/2d_reduction/reduction_{title}_points.png")
 
         ############### Subploat only glomerial
         label = np.where(label == 1)[0]
@@ -734,7 +735,7 @@ class Plot:
                 axs[j].legend().get_frame().set_linewidth(0.0)
                 axs[j].legend(title=r"$\beta$", bbox_to_anchor=(1, 1), loc="upper left")
 
-        plt.savefig("plots/tradeoff/recons_disenangle_tradeoff.pdf", bbox_inches="tight")
+        plt.savefig(self.output_dir / "plots/tradeoff/recons_disenangle_tradeoff.pdf", bbox_inches="tight")
 
     def plot_spatial(self, indices):
         ############# For kidney data
@@ -747,7 +748,7 @@ class Plot:
             plt.figure(figsize=(10, 10))
             plt.imshow(dat.reshape_array(centroids[:, i] / norm, image_shape, pixel_index))
             plt.title(f"m/z {mzs[i]:.4f}", fontsize=20)
-            plt.savefig(f"plots/spatial/mz_{i}", bbox_inches="tight")
+            plt.savefig(self.output_dir / f"plots/spatial/mz_{i}", bbox_inches="tight")
 
     def plot_polygons_get_mask(self, ax, pol_limits, colors, index_to_pos, image_shape):
         # n_poly = 5
@@ -829,7 +830,8 @@ class Plot:
         ##### ALL DATA
         # 1_41
         plt.savefig(
-            f"plots/2d_reduction/kidney/all_data/kidney1_41/carving/carving_latent_ims_mz{mzs[index]:.4f}.png",
+            self.output_dir
+            / f"plots/2d_reduction/kidney/all_data/kidney1_41/carving/carving_latent_ims_mz{mzs[index]:.4f}.png",
             bbox_inches="tight",
             dpi=300,
         )
@@ -909,8 +911,9 @@ class Plot:
 
         #### ALL DATA
         # 1_41
+        # TODO: change path
         plt.savefig(
-            "plots/2d_reduction/kidney/all_data/kidney1_41/carving/carving_latent_mask.png",
+            self.output_dir / "plots/2d_reduction/kidney/all_data/kidney1_41/carving/carving_latent_mask.png",
             bbox_inches="tight",
             dpi=300,
         )
@@ -934,8 +937,9 @@ class Plot:
         # plt.savefig('plots/carving/kidney/carving_latent_kde_adapted.png',bbox_inches='tight',dpi=300)
         #### ALL DATA
         # 1_41
+        # TODO: change path
         plt.savefig(
-            "plots/2d_reduction/kidney/all_data/kidney1_41/carving/carving_latent_kde_adapapted.png",
+            self.output_dir / "plots/2d_reduction/kidney/all_data/kidney1_41/carving/carving_latent_kde_adapapted.png",
             bbox_inches="tight",
             dpi=300,
         )
@@ -1376,6 +1380,7 @@ class Plot:
         # plt.savefig('/Users/pdelacour/Documents/PL_Ecole/beta_vae/saved_data/masks/van1_31/micro_no_labels1_31.png',bbox_inches='tight', dpi=300)
 
         #### VAN1_35
+        # TODO: Change the path
         plt.savefig(
             "/Users/pdelacour/Documents/PL_Ecole/beta_vae/saved_data/masks/van1_35/micro_no_labels1_35.png",
             bbox_inches="tight",
@@ -1550,6 +1555,7 @@ class Plot:
 
         #### VAN1_35
         # plt.savefig('/Users/pdelacour/Documents/PL_Ecole/beta_vae/saved_data/masks/van1_35/micro_complete_1_35.png',bbox_inches='tight', dpi=300)
+        # TODO: change path
         plt.savefig(
             "/Users/pdelacour/Documents/PL_Ecole/beta_vae/saved_data/masks/van1_35/micro_complete_extent_1_35.png",
             bbox_inches="tight",
@@ -1639,7 +1645,7 @@ class Plot:
                 path_effects=[patheffects.withStroke(linewidth=3, foreground="black")],
             )
             ###
-
+            # TODO: change path
             plt.savefig(
                 f"/Users/pdelacour/Documents/PL_Ecole/beta_vae/saved_data/masks/mzs/mzs_{mzs[index]}.png",
                 bbox_inches="tight",

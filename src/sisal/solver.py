@@ -1,23 +1,16 @@
-import sys
+import logging
+from pathlib import Path
 
 import numpy as np
-
-sys.path.insert(0, "/".join(sys.path[0].split("/")[0:-2]) + ("/src"))
-# import model
-
 import torch
 import torch.nn.functional as F
 from torch.optim import Adam
+from tqdm import trange
 
 from sisal.model import BetaVAE
-from sisal.utils import (
-    compute_estimate_std,
-    metric_disentangling,
-    reparametrize,
-)
+from sisal.utils import compute_estimate_std, metric_disentangling, reparametrize
 
-# EPOCHS = 5
-# best_vloss = 1_000_000.
+logger = logging.getLogger()
 
 # def reparametrize(mu, logvar):
 #         std = logvar.div(2).exp()
@@ -34,9 +27,8 @@ class Solver:
         self.z_dim = args.z_dim
         self.model = BetaVAE(args.z_dim, in_size).to(self.device)
         self.save_epochs = args.save_model_epochs
-        self.EPOCHS = args.epochs
+        self.epochs = args.epochs
         self.train_bool = args.train
-        self.PATH = "model/model_weights.pth"  ## Path to save the model
         self.beta = args.beta
         self.save_loss = args.save_loss
 
@@ -92,6 +84,7 @@ class Solver:
 
             if i % 1000 == 999:
                 last_loss = running_loss / 1000  # loss per batch
+                logger.info(f"  batch {i + 1} loss: {last_loss}")
                 # tb_x = epoch_index * len(dataloader) + i + 1
                 # tb_writer.add_scalar('Loss/train', last_loss, tb_x)
                 # tb_writer.flush()
@@ -126,7 +119,10 @@ class Solver:
                 if i % 1000 == 999:
                     return running_loss / 1000, running_recons / 1000, running_KL / 1000
 
-    def train(self, train_loader, validation_loader, PATH, v=0):
+    # TODO: change from args to actual arguments
+    def train(self, train_loader, validation_loader, path: Path, v=0):
+        path = Path(path)
+
         best_vloss = 1e6
         epoch_early_stop = 3
 
@@ -140,19 +136,24 @@ class Solver:
                 disentangling_metric = self.disentangling_metric_estimate(train_loader)
                 results.append([-1, train_loss, train_recons.item(), train_kl.item(), test_loss, disentangling_metric])
             if self.save_epochs:
-                torch.save(self.model, "model/model_weight_n_-1.pth")
+                torch.save(self.model, path.parent / "model/model_weight_n_-1.pth")
+
             # Training loop
-            for epoch in range(self.EPOCHS):
+            for epoch in trange(self.epochs, desc="Training model", unit="epoch"):
                 if early_stop >= epoch_early_stop:
+                    logger.info(f"Early Stop, no improvements for {epoch_early_stop} epochs")
                     if self.save_loss:
-                        with open(f"saved_data/avg_models/model_z{self.z_dim}_b{self.beta}_v{v}.npy", "wb") as f:
+                        with open(
+                            path.parent / f"saved_data/avg_models/model_z{self.z_dim}_b{self.beta}_v{v}.npy", "wb"
+                        ) as f:
                             np.save(f, results)
-                    return PATH
+                    return path
 
                 self.model.train(True)
                 avg_loss, avg_recons, avg_KL = self.train_one_epoch(epoch, train_loader)
                 if self.save_epochs:
-                    torch.save(self.model, f"model/model_weight_n_{epoch * 3 + 2}.pth")
+                    torch.save(self.model, path.parent / f"model/model_weight_n_{epoch * 3 + 2}.pth")
+
                 # Evaluation on the validation set
                 self.model.train(False)
                 running_vloss = 0.0
@@ -175,7 +176,7 @@ class Solver:
                 if avg_vloss < best_vloss:
                     early_stop = 0
                     best_vloss = avg_vloss
-                    torch.save(self.model, PATH)
+                    torch.save(self.model, path)
                     # if self.save_epochs:
                     #     torch.save(self.model, 'model/model_weight_epoch_{}.pth'.format(epoch+1))
 
@@ -183,9 +184,9 @@ class Solver:
                     early_stop += 1
 
         if self.save_loss:
-            with open(f"saved_data/avg_models/model_z{self.z_dim}_b{self.beta}_v{v}.npy", "wb") as f:
+            with open(path.parent / f"saved_data/avg_models/model_z{self.z_dim}_b{self.beta}_v{v}.npy", "wb") as f:
                 np.save(f, results)
-        return PATH
+        return path
 
     def evaluate_initialization(self, train_loader, test_loader):
         with torch.no_grad():
@@ -203,19 +204,23 @@ class Solver:
         return disentangling_metric
 
 
-def train_batch_models(args, train_loader, test_loader):
-    args.train = True
-    args.z_dim = 10
+# TODO: change from args to actual arguments
+def train_batch_models(args, train_loader, test_loader, train: bool = True, z_dim: int = 10, silent: bool = False):
+    args.train = train
+    args.z_dim = z_dim
     n_rep = 4  # Number of times each model is computed
-    for r in range(n_rep):
-        PATH = f"model/average_models/model_weights_z{args.z_dim}_b{args.beta}_v{r}.pth"
+    for r in trange(n_rep, desc="Training models", unit="model", disable=silent):
+        # TODO: add 'output_dir' as input argument and then use it with path
+        path = f"model/average_models/model_weights_z{args.z_dim}_b{args.beta}_v{r}.pth"
         net = Solver(args)
-        net.train(train_loader, test_loader, PATH, v=r)
+        net.train(train_loader, test_loader, path, v=r)
 
 
-def train_batch_beta(args, in_size, train_loader, test_loader):
-    args.train = True
-    args.zdim = 2
-    PATH = f"model/average_models/mouse_pup/model_b_{args.beta}.pth"
+# TODO: change from args to actual arguments
+def train_batch_beta(args, in_size, train_loader, test_loader, train: bool = True, z_dim: int = 10):
+    args.train = train
+    args.z_dim = z_dim
+    # TODO: add 'output_dir' as input argument and then use it with path
+    path = f"model/average_models/mouse_pup/model_b_{args.beta}.pth"
     net = Solver(args, in_size)
-    net.train(train_loader, test_loader, PATH)
+    net.train(train_loader, test_loader, path)
