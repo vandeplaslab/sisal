@@ -33,7 +33,7 @@ dynamic = ["version"]
 dependencies = [
     "numpy",
     "matplotlib",
-    "pytorch",
+    "torch",
     "imageio",
     "cmasher",
     "scipy",
