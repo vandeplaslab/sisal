@@ -9,7 +9,7 @@ import torch
 import torch.nn.functional as F
 from torch.optim import Adam
 
-from sisal.model import beta_vae
+from sisal.model import BetaVAE
 from sisal.utils import (
     compute_estimate_std,
     metric_disentangling,
@@ -32,7 +32,7 @@ class Solver:
 
         self.device = torch.device(args.device)
         self.z_dim = args.z_dim
-        self.model = beta_vae(args.z_dim, in_size).to(self.device)
+        self.model = BetaVAE(args.z_dim, in_size).to(self.device)
         self.save_epochs = args.save_model_epochs
         self.EPOCHS = args.epochs
         self.train_bool = args.train

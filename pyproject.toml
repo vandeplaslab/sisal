@@ -54,6 +54,7 @@ dev = [
     "pre-commit",
     "rich",
     "ruff",
+    "check-manifest",
     "sisal[test]",
 ]
 
@@ -177,5 +178,10 @@ ignore = [
     ".ruff_cache/**/*",
     "tests/**/*",
     ".idea/**/*",
-    "_version.py"
+    "_version.py",
+    "venv/**/*",
+    "dist/**/*",
+    "build/**/*",
+    "docs/**/*",
+    "makefile",
 ]

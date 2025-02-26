@@ -10,6 +10,7 @@ include MANIFEST.in
 include LICENSE
 recursive-include tests *
 recursive-include src *.typed
+recursive-exclude experiments *
 
 # Always include
 global-include *.pyx
