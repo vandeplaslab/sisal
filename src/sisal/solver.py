@@ -85,9 +85,6 @@ class Solver:
             if i % 1000 == 999:
                 last_loss = running_loss / 1000  # loss per batch
                 logger.info(f"  batch {i + 1} loss: {last_loss}")
-                # tb_x = epoch_index * len(dataloader) + i + 1
-                # tb_writer.add_scalar('Loss/train', last_loss, tb_x)
-                # tb_writer.flush()
                 running_loss = 0.0
 
                 ###############
