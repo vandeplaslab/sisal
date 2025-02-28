@@ -65,57 +65,14 @@ class Plot:
             output_dir = Path(path).parent
         self.output_dir = Path(output_dir)
 
-    def plot_latent_dim(self, loader, title):
-        new_colors = [
-            "#1f77b4",
-            "#ff7f0e",
-            "#2ca02c",
-            "#d62728",
-            "#9467bd",
-            "#8c564b",
-            "#e377c2",
-            "#7f7f7f",
-            "#bcbd22",
-            "#17becf",
-        ]
-        c_dict = dict(zip(range(len(new_colors)), new_colors))
-        latent = np.zeros((len(loader.dataset), self.model.z_dim))
-        label = np.zeros(len(loader.dataset))
-        with torch.no_grad():
-            prev = 0
-            for x, l in loader:
-                z_mean, _ = self.model.forward(x)
-                batch = z_mean.size(0)
-                latent[prev : prev + batch, :] = z_mean.detach().numpy()
-                label[prev : prev + batch] = l
-                prev += batch
-
-        plt.figure(title)
-        color_train = np.array([c_dict[e] for e in label])
-        plt.scatter(latent[:, 0], latent[:, 1], c=color_train)
-        plt.title(f"2 dim latent space for {title} points")
-        plt.savefig(self.output_dir / f"plots/2d_reduction/reduction_{title}_points.png")
-
-        ############### Subploat only glomerial
-        label = np.where(label == 1)[0]
-        sub_train = latent[label, :]
-        c_subplot = color_train[label]
-        plt.figure(f"sub_{title}_low_dim")
-        plt.scatter(sub_train[:, 0], sub_train[:, 1], c=c_subplot)
-        plt.title(f"subplot for the Glomeruls on {title} set")
-        # plt.savefig('plots/2d_reduction/subplot_{}_points.png'.format(title))
-
 
     def get_cov_ellipse(self, z_mean, z_var, nstd, color, **kwargs):
         # Width and height of ellipse to draw
         width, height = 2 * nstd * np.sqrt(z_var)
-        # return Ellipse(xy=z_mean, width=width, height=height,fill=False,
-        #             color=color,alpha=0.5, **kwargs)
         return Ellipse(xy=z_mean, width=width, height=height, fill=False, color=color, alpha=1, linewidth=1, **kwargs)
 
     ## Add to ax the scatter points and the covariance matrix around for a proportion p
     def scatter_with_covar(self, ax, full_latent, vars, label, col_dict, mask_to_name):
-        # Set the fontsize of xticks and yticks
         ax.tick_params(axis="x", labelsize=20)
         ax.tick_params(axis="y", labelsize=20)
 
@@ -129,7 +86,6 @@ class Plot:
         else:
             for i in np.unique(label):
                 mask = label == i
-                # alpha=0.5
                 ax.scatter(
                     x=full_latent[mask, 0],
                     y=full_latent[mask, 1],
@@ -141,7 +97,6 @@ class Plot:
             for i in range(vars.shape[0]):
                 e = self.get_cov_ellipse(full_latent[i, :], vars[i, :], 1, color=col_dict[label[i]])
                 ax.add_artist(e)
-            # ax.legend(markerscale=50,loc='lower right')
             ax.legend(markerscale=70, loc="upper right", fontsize="20")
 
     # p subsample proportion of full _latent
@@ -174,6 +129,8 @@ class Plot:
     
 
     ## p:proportions of all points plotted
+    # Plot for the synthetic data in which we know the scaling value (SNR)
+    # Plot the scaling values in latent space
     def plot_latent_dim_coeff(self, p=1, random_state_synthetic=1326):
         n = self.full_latent.shape[0]
         alpha_label = self.alpha
@@ -205,7 +162,6 @@ class Plot:
         # Put ticks on top of the bar
         ax_cbar.xaxis.set_ticks_position("top")
 
-        # plt.title('Scaling values in latent space')
         plt.close()
 
         fig, ax = plt.subplots(figsize=(10, 10))
@@ -480,17 +436,15 @@ class Plot:
                 )  # z_next >= z_c + t
                 idx_closest = step_array.argmin()  # index of closest z_1
             else:
-                # print('else case')
                 step_array = np.where(
                     -z_list[:, 1 + fa] + z_curr[fa] + t >= 0, z_list[:, 1 + fa], -np.inf
                 )  # z_next <= z_c - t
                 idx_closest = step_array.argmax()  # index of closest z_1
-            # idx_closest = step_array.argmin() #index of closest z_1
             if not np.isinf(step_array[idx_closest]):
                 z_next = z_list[idx_closest, 1:]
                 idx_next = z_list[idx_closest, 0]
                 return z_next, idx_next
-        return z_curr, idx_curr  # We don't traverse
+        return z_curr, idx_curr  
 
     def compute_full_trajectory(self, fa, z_start, idx_start, t, n_steps, full_latent):
         z_arr1, idx_arr1 = self.compute_trajectory(fa, z_start, idx_start, t, n_steps, full_latent, mode="forward")
@@ -517,49 +471,48 @@ class Plot:
 
         return z_arr, idx_arr
 
-    def draw_latent_connections_on_image(self, fa, z_min, z_max, full_latent, loader, index=151):
-        centroids, glomeruls_mask, pixel_index = dat.load()  # original data
-        image_shape, norm, mzs = dat.load_shape_norm_mzs()
+    # def draw_latent_connections_on_image(self, fa, z_min, z_max, full_latent, loader, index=151):
+    #     centroids, glomeruls_mask, pixel_index = dat.load()  # original data
+    #     image_shape, norm, mzs = dat.load_shape_norm_mzs()
 
-        norm = 1
-        # title = 'Spatial_traversal'
-        fig, ax = plt.subplots(figsize=(10, 5), nrows=1, constrained_layout=True)
+    #     norm = 1
+    #     # title = 'Spatial_traversal'
+    #     fig, ax = plt.subplots(figsize=(10, 5), nrows=1, constrained_layout=True)
 
-        fig.suptitle(f"m/z {mzs[index]:.4f}", fontsize=20)
+    #     fig.suptitle(f"m/z {mzs[index]:.4f}", fontsize=20)
 
-        # ax.imshow(dat.reshape_array(centroids[:, index] / norms[norm], image_shape, pixel_index))
+    #     # ax.imshow(dat.reshape_array(centroids[:, index] / norms[norm], image_shape, pixel_index))
 
-        ax.imshow(dat.reshape_array(centroids[:, index] / norm, image_shape, pixel_index))
-        ax.imshow(glomeruls_mask, alpha=0.5)
+    #     ax.imshow(dat.reshape_array(centroids[:, index] / norm, image_shape, pixel_index))
+    #     ax.imshow(glomeruls_mask, alpha=0.5)
 
-        n_steps = 40
-        t = (z_max[fa] - z_min[fa]) / 100  # must be multidimensional when z_dim > 2
-        x, _, idx_start = next(iter(loader))
-        index_to_pos = self.index_to_image_pos(image_shape, pixel_index)
-        with torch.no_grad():
-            z_mean, _ = self.model.forward(x)
-            z_start = z_mean.detach().numpy()
-            for i in np.arange(11, 12):
-                # ax.plot(z_start[i,0],z_start[i,1] , ".")
-                _, z_index = self.compute_trajectory(fa, z_start[i], idx_start[i], t, n_steps, full_latent)
-                for j in range(1, n_steps + 1):
-                    z_curr = z_index[j - 1]
-                    z_next = z_index[j]
-                    x = index_to_pos[z_curr]
-                    d_pos = index_to_pos[z_next] - x
-                    plt.quiver(x[0], x[1], d_pos[0], d_pos[1], scale_units="xy", angles="xy", scale=1, alpha=0.8)
+    #     n_steps = 40
+    #     t = (z_max[fa] - z_min[fa]) / 100  # must be multidimensional when z_dim > 2
+    #     x, _, idx_start = next(iter(loader))
+    #     index_to_pos = self.index_to_image_pos(image_shape, pixel_index)
+    #     with torch.no_grad():
+    #         z_mean, _ = self.model.forward(x)
+    #         z_start = z_mean.detach().numpy()
+    #         for i in np.arange(11, 12):
+    #             # ax.plot(z_start[i,0],z_start[i,1] , ".")
+    #             _, z_index = self.compute_trajectory(fa, z_start[i], idx_start[i], t, n_steps, full_latent)
+    #             for j in range(1, n_steps + 1):
+    #                 z_curr = z_index[j - 1]
+    #                 z_next = z_index[j]
+    #                 x = index_to_pos[z_curr]
+    #                 d_pos = index_to_pos[z_next] - x
+    #                 plt.quiver(x[0], x[1], d_pos[0], d_pos[1], scale_units="xy", angles="xy", scale=1, alpha=0.8)
 
-        # plt.savefig(path+'factor_{}_reconstruction_mz_{}.png'.format(fa,mzs[index]))
 
-    def index_to_mask(self):
-        loader, _ = dat.full_index_normalized_data()
-        id_mask = {}
-        for _, l, id in loader:
-            label = l.detach().numpy()
-            index = id.detach().numpy()
-            for j in range(len(index)):
-                id_mask[index[j]] = label[j]
-        return id_mask
+    # def index_to_mask(self):
+    #     loader, _ = dat.full_index_normalized_data()
+    #     id_mask = {}
+    #     for _, l, id in loader:
+    #         label = l.detach().numpy()
+    #         index = id.detach().numpy()
+    #         for j in range(len(index)):
+    #             id_mask[index[j]] = label[j]
+    #     return id_mask
 
     def plot_recons_dis_trade_of(self):
         _, axs = plt.subplots(3, 1, figsize=(10, 10))
@@ -596,7 +549,6 @@ class Plot:
                 axs[j].legend().get_frame().set_linewidth(0.0)
                 axs[j].legend(title=r"$\beta$", bbox_to_anchor=(1, 1), loc="upper left")
 
-        plt.savefig(self.output_dir / "plots/tradeoff/recons_disenangle_tradeoff.pdf", bbox_inches="tight")
 
     def plot_spatial(self, indices):
         ############# For kidney data
@@ -633,269 +585,6 @@ class Plot:
                 masks[int(pos[j, 0]), int(pos[j, 1])] = i + 1
         return masks
 
-    # def plot_carving_separate(self, full_latent, vars, label, mask_to_name, index=151):
-    #     col_dict = self.color_dict()
-
-    #     ############# For kidney data
-    #     # print('Kidney carving')
-    #     # Draw image mask on one mzs in the bottom
-    #     centroids, _, pixel_index = dat.load()  # original data
-    #     image_shape, norm, mzs = dat.load_shape_norm_mzs()
-    #     index_to_pos = self.index_to_image_pos(image_shape, pixel_index)
-    #     norm = 1
-
-    #     masks = np.zeros(image_shape)
-    #     ####### V4
-    #     pol_limit1 = [(-0.4, -2.3), (0.1, -2.3), (-0.1, 1.7), (-0.5, 1.5)]  # Orange
-    #     pol_limit2 = [(0.3, -3), (1.1, -3), (0.6, 1), (0.4, 1.3), (0.1, 0.3), (0.1, -1)]  # Black
-    #     pol_limit3 = [(1.7, -3), (2.8, -2), (1, 1.3), (0.7, 1)]  # Red
-    #     pol_limit4 = [(-2.4, -2.4), (-1.8, -2.4), (-1.3, -1), (-1.2, 0.6), (-2, 0.8)]  # Pink
-    #     pol_limit5 = [(-1.1, -2.2), (-0.5, -2.3), (-0.6, 1), (-1.2, 0.9)]  # Green
-    #     colors = [
-    #         "#F96E46",
-    #         "black",
-    #         "#a30000",
-    #         "#F9C846",
-    #         "#6DCC8C",
-    #         "#f44e97",
-    #         "#6a329f",
-    #     ]  # Burnt sienna(orange), black , ... , Saffron(yellow)
-    #     names = ["glomerulus", "pr1", "pr2", "coll_duct", "thick_Ascend", "funky_gl"]
-    #     pol_limits = [pol_limit1, pol_limit2, pol_limit3, pol_limit4, pol_limit5]
-
-    #     #### IMS_image
-    #     _, ax = plt.subplots(figsize=(10, 10))
-    #     image = dat.reshape_array(centroids[:, index] / norm, image_shape, pixel_index)
-    #     # Optional flip to match the microscopy data
-    #     # ax.imshow(np.flip(image , axis = (0,1)))
-
-    #     # VAN1_41
-    #     ax.imshow(image)
-
-    #     # VAN 1_31
-    #     # ax.imshow(image.T)
-    #     ## Van1_35
-    #     # image_rot = image.T
-    #     # image_rot = image_rot[::-1,:]
-    #     # ax.imshow(image_rot)
-
-    #     ####
-    #     ax.tick_params(axis="x", labelsize=20)
-    #     ax.tick_params(axis="y", labelsize=20)
-    #     # ax.set_xlabel('Pixels',fontsize="25")
-    #     # ax.set_ylabel('Pixels',fontsize="25")
-
-    #     ##### KIDNEY
-    #     # plt.savefig(f'plots/carving/kidney/carving_latent_ims_mz{mzs[index]:.4f}.png',bbox_inches='tight',dpi=300)
-
-    #     ##### ALL DATA
-    #     # 1_41
-    #     plt.savefig(
-    #         self.output_dir
-    #         / f"plots/2d_reduction/kidney/all_data/kidney1_41/carving/carving_latent_ims_mz{mzs[index]:.4f}.png",
-    #         bbox_inches="tight",
-    #         dpi=300,
-    #     )
-    #     # 1_31
-    #     # plt.savefig(f'plots/2d_reduction/kidney/all_data/kidney1_31/carving/carving_latent_ims_mz{mzs[index]:.4f}.png',bbox_inches='tight',dpi=300)
-    #     # 1_35
-    #     # plt.savefig(f'plots/2d_reduction/kidney/all_data/kidney1_35/carving/carving_latent_ims_mz{mzs[index]:.4f}.png',bbox_inches='tight',dpi=300)
-    #     # ax[1,0].set_title(f"m/z {mzs[index]:.4f}")
-
-    #     #### Latent Space
-    #     _, ax = plt.subplots(figsize=(10, 10))
-    #     ax.set_xlim(-4, 4)
-    #     ax.set_ylim(-4, 4)
-
-    #     ax.set_xlim(-4.5, 4.5)
-    #     ax.set_ylim(-4.5, 4.5)
-    #     col_dict = {0: "blue"}  ## To have black and white
-    #     # ax.set_xlabel(r'$z_1$',fontsize="40")
-    #     # ax.set_ylabel(r'$z_2$',fontsize="40", rotation=0)
-    #     self.scatter_with_covar(ax, full_latent[:, 1:], vars, label, col_dict, mask_to_name)
-
-    #     # add the polygons
-    #     n_poly = 5
-    #     if len(pol_limits) != 0:
-    #         for i, pol_limit in enumerate(pol_limits):
-    #             if i < n_poly:
-    #                 ## Polygones on top images
-    #                 poly1 = Polygon(pol_limit, alpha=0.5, ec="gray", fc=colors[i], visible=True)
-    #                 p = m_path.Path(pol_limit)
-    #                 ax.add_patch(poly1)
-    #                 flag = p.contains_points(full_latent[:, 1:])
-    #                 index_mask = full_latent[:, 0][flag]
-    #                 ###### Selection for traversal
-    #                 np.argmin(full_latent[flag, 2])
-    #                 np.argmax(full_latent[flag, 2])
-    #                 pos = np.zeros((len(index_mask), 2))
-    #                 for j, ind in enumerate(index_mask):
-    #                     pos[j, :] = index_to_pos[ind]
-    #             ## Plot scatter image bottom right
-    #             if i < n_poly:
-    #                 for j, ind in enumerate(index_mask):
-    #                     masks[int(pos[j, 0]), int(pos[j, 1])] = i + 1
-
-    #     ### Save all the mask as binary masks
-    #     PATH_to_save = "saved_data/masks/van1_41/"
-    #     names_files = dict(zip(range(1, len(names) + 1), names))
-    #     for l in np.unique(masks):
-    #         if l != 0:
-    #             mask_temp = masks == l
-    #             with open(PATH_to_save + f"mask_{names_files[l]}.npy", "wb") as f:
-    #                 np.save(f, mask_temp)
-
-    #     #### Masked data
-    #     _, ax = plt.subplots(figsize=(10, 10))
-    #     cmap_col = colors_mat.ListedColormap(["white"] + colors[:n_poly])
-    #     ax.imshow(masks, cmap=cmap_col, interpolation="nearest")
-    #     ##################################
-    #     ax.tick_params(axis="x", labelsize=20)
-    #     ax.tick_params(axis="y", labelsize=20)
-    #     # ax.set_xlabel('Pixels',fontsize="25")
-    #     # ax.set_ylabel('Pixels',fontsize="25")
-
-    #     #### ALL DATA
-    #     # 1_41
-    #     # TODO: change path
-    #     plt.savefig(
-    #         self.output_dir / "plots/2d_reduction/kidney/all_data/kidney1_41/carving/carving_latent_mask.png",
-    #         bbox_inches="tight",
-    #         dpi=300,
-    #     )
-
-    #     ###### NEW KDE
-    #     fig, ax = plt.subplots(figsize=(10, 10))
-    #     ax.tick_params(axis="x", labelsize=20)
-    #     ax.tick_params(axis="y", labelsize=20)
-    #     image = kernel_adapated(full_latent, vars)
-    #     plot_kernel_adapted(ax, fig, image)
-    #     n_poly = 5
-    #     if len(pol_limits) != 0:
-    #         for i, pol_limit in enumerate(pol_limits):
-    #             if i < n_poly:
-    #                 poly1 = Polygon(pol_limit, alpha=0.7, ec="#FF69B4", fc="none", lw=8, visible=True)  ## Deepink
-    #                 ax.add_patch(poly1)
-    #     # plt.savefig('plots/carving/kidney/carving_latent_kde_adapted.png',bbox_inches='tight',dpi=300)
-    #     #### ALL DATA
-    #     # 1_41
-    #     # TODO: change path
-    #     plt.savefig(
-    #         self.output_dir / "plots/2d_reduction/kidney/all_data/kidney1_41/carving/carving_latent_kde_adapapted.png",
-    #         bbox_inches="tight",
-    #         dpi=300,
-    #     )
-        
-
-    #     #### KDE data
-    #     fig, ax = plt.subplots(figsize=(10, 10))
-    #     ax.tick_params(axis="x", labelsize=20)
-    #     ax.tick_params(axis="y", labelsize=20)
-    #     X, Y = np.mgrid[-4:4:200j, -4:4:200j]
-    #     grid = np.vstack([X.ravel(), Y.ravel()])
-    #     kernel = stats.gaussian_kde(full_latent[:, 1:].T, bw_method="scott")
-    #     # f = 3 #f = 1/3
-    #     self.kernel_density(ax, fig, kernel, kernel.factor, grid, X.shape)
-    #     # add the polygons
-    #     n_poly = 5
-    #     if len(pol_limits) != 0:
-    #         for i, pol_limit in enumerate(pol_limits):
-    #             if i < n_poly:
-    #                 ## Polygones on top images
-    #                 poly1 = Polygon(pol_limit, alpha=0.5, ec=colors[i], fc="none", lw=4, visible=True)
-    #                 #'darkorange','black', '#a30000', "hotpink","#6DCC8C",'#f44e97','#6a329f'
-    #                 poly1 = Polygon(pol_limit, alpha=0.7, ec="#FF69B4", fc="none", lw=8, visible=True)
-    #                 p = m_path.Path(pol_limit)
-    #                 ax.add_patch(poly1)
-
-    # def plot_carving(self, full_latent, vars, label, mask_to_name, index=151):
-    #     _, ax = plt.subplots(figsize=(10, 10), nrows=2, ncols=2, constrained_layout=True)
-
-    #     col_dict = self.color_dict()
-
-    #     ############# For kidney data
-    #     centroids, _, pixel_index = dat.load()  # original data
-    #     image_shape, norm, mzs = dat.load_shape_norm_mzs()
-    #     index_to_pos = self.index_to_image_pos(image_shape, pixel_index)
-    #     norm = 1
-
-    #     ## Bottom left
-    #     # For Mouse pup add .T   ax[1,0].imshow(dat.reshape_array(centroids[:, index] / norm, image_shape, pixel_index).T)
-    #     ############################################################################################ Add .T
-    #     ax[1, 0].imshow(dat.reshape_array(centroids[:, index] / norm, image_shape, pixel_index).T)
-
-    #     ax[0, 0].set_xlim(-4, 4)
-    #     ax[0, 0].set_ylim(-4, 4)
-    #     self.scatter_with_covar(ax[0, 0], full_latent[:, 1:], vars, label, col_dict, mask_to_name)
-
-    #     ## For bottom right image
-    #     mask = np.zeros(image_shape)
-    #     pol_limit1 = [(0.5, -3.4), (0.7, -3.2), (0.7, 2.2), (0.2, 2.2)]  ### Orange
-    #     pol_limit2 = [(-1.9, -2.1), (-1.3, -3), (-0.4, 1.2), (-1.1, 1.4)]  ### Blue
-    #     pol_limit3 = [(-0.3, -3.4), (0.2, -3.2), (0.2, 1), (-0.3, 1)]  ### Green
-    #     pol_limit4 = [(0.9, -3), (1.5, -2.9), (1.1, 1.2), (0.8, 1.2)]  ### Black
-    #     pol_limit5 = [(2.6, -3), (3.9, -2.8), (3, 1.2), (1.4, 0.9), (1.3, -0.1)]  ### Red
-    #     pol_limit6 = [(0.2, -13), (0.6, -13), (0.6, -3.5), (0, -3.5)]  ### Orange extra leg  	#f44e97 #pink
-    #     colors = ["darkorange", "CornflowerBlue", "#6DCC8C", "black", "#a30000", "#f44e97", "#6a329f"]
-
-    #     np.zeros(image_shape)
-
-    #     ## Plot of polygons on top images
-    #     pol_limits = [pol_limit1, pol_limit2, pol_limit3, pol_limit4, pol_limit5, pol_limit6]
-
-    #     n_poly = 5
-    #     if len(pol_limits) != 0:
-    #         for i, pol_limit in enumerate(pol_limits):
-    #             if i < n_poly:
-    #                 ## Polygones on top images
-    #                 poly1 = Polygon(pol_limit, alpha=0.5, ec="gray", fc=colors[i], visible=True)
-    #                 poly2 = Polygon(pol_limit, alpha=0.4, ec="gray", fc=colors[i], visible=True)
-    #                 p = m_path.Path(pol_limit)
-    #                 ax[0, 0].add_patch(poly1)
-    #                 ax[0, 1].add_patch(poly2)
-    #                 flag = p.contains_points(full_latent[:, 1:])
-    #                 index_mask = full_latent[:, 0][flag]
-    #                 ###### Selection for traversal
-    #                 np.argmin(full_latent[flag, 2])
-    #                 np.argmax(full_latent[flag, 2])
-    #                 ##########################
-    #                 pos = np.zeros((len(index_mask), 2))
-    #                 for j, ind in enumerate(index_mask):
-    #                     # print('#### ind = ', ind)
-    #                     pos[j, :] = index_to_pos[ind]
-    #             ## Plot scatter image bottom right
-    #             if i < n_poly:
-    #                 for j, ind in enumerate(index_mask):
-    #                     mask[int(pos[j, 0]), int(pos[j, 1])] = i + 1
-
-    #     ## Plot scatter image bootom right
-    #     ## For Mouse pup add .T    ax[1,1].imshow(mask.T, interpolation='nearest')
-    #     cmap_col = colors_mat.ListedColormap(["white"] + colors[:n_poly])
-    #     ax[1, 1].imshow(mask.T, cmap=cmap_col, interpolation="nearest")  ## Add the desired colormap
-
-    #     ## Create color map for mask
-    #     cmap_left = plt.cm.colors.ListedColormap(["none", colors[5]])
-    #     cmap_left.set_under(color="none")
-    #     mask_type = ["Glomerulus", "Proximal_tubule", "p2", "Collecting_duct", "Distal_tubule", "Thick_ascendin_limb"]
-    #     mask_type = ["", ""]
-    #     ax[1, 1].set_title(f"Discovered {mask_type[0]} mask through carving")
-
-    #     ### Plot kernel top right
-    #     X, Y = np.mgrid[-4:4:200j, -4:4:200j]
-    #     grid = np.vstack([X.ravel(), Y.ravel()])
-    #     kernel = stats.gaussian_kde(full_latent[:, 1:].T, bw_method="scott")
-    #     # f = 3 #f = 1/3
-    #     self.kernel_density(ax[0, 1], kernel, kernel.factor, grid, X.shape)
-
-    #     ### Save all the mask as binary masks
-    #     PATH_to_save = "saved_data/masks/van2_5/"
-    #     names = ["glomerulus", "pr1", "pr2", "coll_duct", "thick_Ascend", "funky_gl"]
-    #     names_files = dict(zip(range(1, len(names) + 1), names))
-    #     for l in np.unique(mask):
-    #         if l != 0:
-    #             mask_temp = mask == l
-    #             with open(PATH_to_save + f"mask_{names_files[l]}.npy", "wb") as f:
-    #                 np.save(f, mask_temp)
 
     def plot_kernel_density_estimation(self, full_latent, vars, label, mask_to_name, title=""):
         _, ax = plt.subplots(nrows=2, ncols=2, figsize=(15, 15))
@@ -948,66 +637,6 @@ class Plot:
         # Set the colorbar ticks and label size
         colorbar.ax.tick_params(labelsize=20)
 
-    # def model_evolution(self, loader, mask_to_name):
-    #     # Boolean deciding wether plots for kernel densities are made
-    #     frames = []
-    #     n = 36
-
-    #     # Create grid to evaluate the kernel on
-    #     X, Y = np.mgrid[-4:4:200j, -4:4:200j]
-    #     np.vstack([X.ravel(), Y.ravel()])
-    #     for e in np.arange(-1, n):
-    #         image = imageio.v2.imread(f"plots/2d_reduction/kernel_density/evolution/kernel_density_{e}.png")
-    #         frames.append(image)
-
-    #     imageio.mimsave(
-    #         "plots/2d_reduction/kidney/kernel_density/kernel_density.gif",  # output gif
-    #         frames,  # array of input frames
-    #         fps=3,
-    #     )  # optional: frames per second
-
-    # def model_evolution_kernel_latent(self, loader, mask_to_name):
-    #     # Boolean deciding wether plots for kernel densities are made
-    #     frames = []
-    #     n = 36
-
-    #     # Create grid to evaluate the kernel on
-    #     X, Y = np.mgrid[-4:4:200j, -4:4:200j]
-    #     grid = np.vstack([X.ravel(), Y.ravel()])
-
-    #     col_dict = self.color_dict()
-    #     for epoch in range(-1, n):
-    #         model_path = f"model/model_kidney6/model_weight_n_{epoch}.pth"
-    #         model = torch.load(model_path, map_location=torch.device("cpu"))
-    #         full_latent, vars, label = compute_latent(loader, model)
-    #         mask0 = label != 0
-    #         full_latent = full_latent[mask0, :]
-    #         vars = vars[mask0, :]
-    #         label = label[mask0]
-
-    #         ## 2d latent
-    #         _, ax = plt.subplots(ncols=2, figsize=(20, 10))
-    #         ax[0].set_xlim(-4, 4)
-    #         ax[0].set_ylim(-4, 4)
-    #         self.scatter_with_covar(ax[0], full_latent[:, 1:], vars, label, col_dict, mask_to_name)
-
-    #         ## Kernel density
-    #         kernel = stats.gaussian_kde(full_latent[:, 1:].T, bw_method="scott")
-    #         self.kernel_density(ax[1], kernel, kernel.factor / 3, grid, X.shape)
-
-    #         # plt.savefig('plots/2d_reduction/evolution/model_evolution_{}.png'.format(epoch), bbox_inches='tight')
-
-    #     for e in np.arange(-1, n):
-    #         image = imageio.v2.imread(f"plots/2d_reduction/evolution/model_evolution_{e}.png")
-    #         frames.append(image)
-
-    #     imageio.mimsave(
-    #         "plots/2d_reduction/evolution/model_evolution.gif",  # output gif
-    #         frames,  # array of input frames
-    #         fps=6,
-    #     )  # optional: frames per second
-
-    ### Function used in zoomed_micro
     def do_plot(self, ax, Z, transform, cmap_col):
         im = ax.imshow(
             Z,
@@ -1022,475 +651,9 @@ class Plot:
         trans_data = transform + ax.transData
         im.set_transform(trans_data)
 
-        ## VAN 1_31
-        # im= im.T
-        ##
-
         # display intended extent of the image
         x1, x2, y1, y2 = im.get_extent()
         ax.plot([x1, x2, x2, x1, x1], [y1, y1, y2, y2, y1], "y--", transform=trans_data, linewidth=5)
 
     def reg(self, r, width, height):
         return [r[0], r[0] + width, r[1], r[1] + height]
-
-    # def plot_zoomed_micro(self):
-    #     ### Load microscopy
-    #     ## Kidney
-    #     # microscopy_path = "/Users/pdelacour/Documents/PL_Ecole/beta_vae/saved_data/masks/VAN0046-LK-3-45-PAS-registered.ome.tiff"
-    #     # json_file = "/Users/pdelacour/Documents/PL_Ecole/beta_vae/saved_data/masks/2023_05_VAN0046_microscopy_multiple_files_transform_v2.i2m.json"
-    #     # PATH = '/Users/pdelacour/Documents/PL_Ecole/beta_vae/saved_data/masks/'
-    #     # names = ['glomerulus','pr1','pr2','coll_duct','thick_Ascend','funky_gl']
-    #     # colors = ['darkorange',"blue", "#6DCC8C", 'black','#a30000','#f44e97','#6a329f']
-
-    #     ### VAN1_41
-    #     # microscopy_path = "/Users/pdelacour/Documents/PL_Ecole/beta_vae/saved_data/masks/van1_41/VAN0063-RK-1-41-PAS_to_postAF_registered.ome.tiff"
-    #     # #json_file = "/Users/pdelacour/Documents/PL_Ecole/beta_vae/saved_data/masks/van1_41/old_mask/van1_41_transform.i2r.json"
-    #     # json_file = "/Users/pdelacour/Documents/PL_Ecole/beta_vae/saved_data/masks/van1_41/VAN0063-RK-1-41_transform.v2.i2r.json"
-    #     # PATH = '/Users/pdelacour/Documents/PL_Ecole/beta_vae/saved_data/masks/van1_41/'
-    #     # names = ['glomerulus','pr1','pr2']
-
-    #     ### VAN1_31
-    #     # microscopy_path = "/Users/pdelacour/Documents/PL_Ecole/beta_vae/saved_data/masks/van1_31/VAN0042-RK-1-31-PAS_to_postAF_registered.ome.tiff"
-    #     # #json_file = "/Users/pdelacour/Documents/PL_Ecole/beta_vae/saved_data/masks/van1_31/old_mask/van1_31_transform.i2r.json"
-    #     # json_file = "/Users/pdelacour/Documents/PL_Ecole/beta_vae/saved_data/masks/van1_31/VAN0042-RK-1-31_transform.v2.i2r.json"
-    #     # PATH = '/Users/pdelacour/Documents/PL_Ecole/beta_vae/saved_data/masks/van1_31/'
-    #     # names = ['glomerulus','pr1','pr2']
-
-    #     ### VAN1_35
-    #     microscopy_path = "/Users/pdelacour/Documents/PL_Ecole/beta_vae/saved_data/masks/van1_35/VAN0049-RK-1-35-PAS_to_postAF_registered.ome.tiff"
-    #     # json_file = "/Users/pdelacour/Documents/PL_Ecole/beta_vae/saved_data/masks/van1_35/old_mask/van1_35_transform.i2r.json"
-    #     json_file = "/Users/pdelacour/Documents/PL_Ecole/beta_vae/saved_data/masks/van1_35/VAN0049-RK-1-35_transform.v2.i2r.json"
-    #     PATH = "/Users/pdelacour/Documents/PL_Ecole/beta_vae/saved_data/masks/van1_35/"
-    #     names = ["glomerulus", "pr1", "pr2"]
-
-    #     # colors = ['darkorange',"blue", "#6DCC8C"]
-    #     # colors = ['#F96E46',"blue", "#6DCC8C"] ## Orange
-
-    #     image = io.imread(microscopy_path)
-
-    #     ### ADD this to remove black artefacts in VAN1_31
-    #     image[np.sum(image, axis=2) == 0, :] = 150
-
-    #     ## Load the masks
-    #     f = open(json_file)
-    #     data = json.load(f)
-    #     M = data["matrix_xy_px"]
-
-    #     # colors = ['darkorange',"blue", "blue", 'black','#a30000','#f44e97','#6a329f']
-    #     names_files = dict(zip(range(len(names)), names))
-    #     masks = []
-    #     for l in range(len(names)):
-    #         with open(PATH + f"mask_{names_files[l]}.npy", "rb") as f:
-    #             masks.append(np.load(f))
-
-    #     ## Combined the masks
-    #     mask = masks[0]
-    #     for i in range(1, 3):
-    #         mask = mask + (i + 1) * np.copy(masks[i]).astype("float32")
-    #     mask[mask == 0] = np.nan
-    #     # colors = ['darkorange','black', '#a30000', "hotpink","#6DCC8C",'#f44e97','#6a329f']
-    #     colors = ["#F96E46", "black", "#a30000", "hotpink", "#6DCC8C", "#f44e97", "#6a329f"]
-    #     cmap_col = colors_mat.ListedColormap(colors[:3])
-
-    #     # with_label =True
-    #     f, ax = plt.subplots(figsize=(20, 15))
-    #     f.patch.set_visible(False)
-
-    #     ## Plot the image on main axis
-    #     im = ax.imshow(image)
-    #     ax.axis("off")
-
-    #     #### Kidney
-    #     limits = np.array((1900, 13400, 1019, 9000))
-    #     r1 = [6200, 6500, 6550, 6870]
-    #     r2 = [7230, 7530, 4050, 4380]  ## x1 , x2 , y1 , y2
-    #     r3 = [8100, 8400, 3050, 3370]
-
-    #     ### VAN1_41
-    #     # limits = np.array((511, 13100, 4700, 10300)) # x1 , x2 , y1 , y2
-    #     # width = 280
-    #     # height = 320
-    #     # width = (limits[1]-limits[0])*0.05
-    #     # #/20
-    #     # #height = limits[3] - limits[2]
-    #     # # Check upper left corner in napari
-    #     # r1 = self.reg([3200,6800],width,height)
-    #     # r2 = self.reg([5300,7250], width,height)## x1 , x2 , y1 , y2
-    #     # r3 = self.reg([8750,8150],width,height )
-
-    #     # loc = [[1,3],[1,3],[2,4]]
-    #     # loc = [[1,3],[2,4],[2,4]]
-    #     # ax.set_xlim(limits[0],limits[1])
-    #     # ax.set_ylim(limits[3],limits[2])
-
-    #     ### VAN1_31
-    #     # print('## Before = ' , image.shape)
-    #     # trans_data = Affine2D().rotate(np.pi/2)+ ax.transData
-    #     # im.set_transform(trans_data)
-    #     # print('## After = ', image.shape)
-    #     # limits = np.array((13645, 19037,5972, 18231)) # x1 , x2 , y1 , y2
-    #     # ## Rotate the limit
-    #     # limits = np.array((5972, 18231,13645, 19037))
-    #     # width = 280
-    #     # height = 320
-    #     # width = (limits[1]-limits[0])*0.05
-    #     # offset = 3000
-
-    #     # # r3 = self.reg([14730,6800],width,height)
-    #     # # r2 = self.reg([16231,9662], width,height)## x1 , x2 , y1 , y2
-    #     # # r1 = self.reg([18317,12980],width,height )
-
-    #     # r1 = self.reg([10600+offset,18317],width,height)
-    #     # r2 = self.reg([13690+offset,16231], width,height)## x1 , x2 , y1 , y2
-    #     # r3 = self.reg([16480+offset,14630],width,height )
-
-    #     # r1 = self.reg([10600+offset,18317],width,height)
-    #     # r2 = self.reg([13690+offset,16131], width,height)## x1 , x2 , y1 , y2
-    #     # r3 = self.reg([16680+offset,14830],width,height )
-    #     # loc = [[1,3],[1,3],[1,3]]
-    #     # #loc = [[2,4],[2,4],[2,4]]
-    #     # ax.set_xlim(limits[0]-image.shape[0]+offset,limits[1]-image.shape[0]+offset)
-    #     # ax.set_ylim(limits[3],limits[2])
-
-    #     ### VAN1_35
-    #     # image = np.moveaxis(image,[0,1],[1,0])
-    #     trans_data = Affine2D().rotate(np.pi / 2) + ax.transData
-    #     im.set_transform(trans_data)
-    #     limits = np.array((11000, 21000, 4400, 10950))  # x1 , x2 , y1 , y2
-    #     width = 280
-    #     height = 320
-    #     width = (limits[1] - limits[0]) * 0.05
-    #     offset = -5400
-    #     # = 3000
-    #     r1 = self.reg([6380, 9100], width, height)
-    #     r2 = self.reg([9190, 7000], width, height)  ## x1 , x2 , y1 , y2
-    #     r3 = self.reg([12380, 4950], width, height)
-    #     loc = [[2, 4], [2, 4], [2, 4]]
-    #     # loc = [[2,4],[2,4],[2,4]]
-    #     ax.set_xlim(limits[0] - image.shape[0] + offset, limits[1] - image.shape[0] + offset)
-    #     ax.set_ylim(limits[3], limits[2])
-
-    #     regions = [r1, r2, r3]
-
-    #     # limits = np.array((1039, 14000, 748, 9000))
-
-    #     # if with_label:
-    #     #     self.do_plot(ax,mask,Affine2D(np.array(M)),cmap_col)
-    #     axs = []
-    #     inset_map = {1: 4, 4: 1, 2: 3, 3: 2}
-    #     for i, r in enumerate(regions):
-    #         axins = ax.inset_axes((0 + 0.34 * i, 1.05, 0.32, 0.4))
-    #         axs.append(axins)
-
-    #         axins.axis("off")
-
-    #         im_in = axins.imshow(image)
-
-    #         # VAN1_41
-    #         # axins.axis('off')
-    #         # axins.set_xlim(r[0],r[1])
-    #         # axins.set_ylim(r[3],r[2])
-
-    #         ## VAN1_31 & VAN1_35
-    #         ## Rotate images :
-    #         trans_data = Affine2D().rotate(np.pi / 2) + axins.transData
-    #         im_in.set_transform(trans_data)
-
-    #         axins.set_xlim(r[0] - image.shape[0], r[1] - image.shape[0])
-    #         axins.set_ylim(r[3], r[2])
-
-    #         # mark_inset(ax,axins,loc1=loc[i][0],loc2=loc[i][1],linewidth=4,ec ='#1f77b4')
-    #         patch, pp1, pp2 = mark_inset(
-    #             ax, axins, loc1=loc[i][0], loc2=loc[i][1], linewidth=4, ec="#DE970B"
-    #         )  # dark yellow
-    #         pp1.loc1 = loc[i][0]
-    #         pp1.loc2 = inset_map[pp1.loc1]
-    #         pp2.loc1 = loc[i][1]
-    #         pp2.loc2 = inset_map[pp2.loc1]
-
-    #     ### Kidney
-    #     # plt.savefig('/Users/pdelacour/Documents/PL_Ecole/beta_vae/saved_data/masks/micro_no_labels.png',bbox_inches='tight', dpi=300)
-
-    #     #### VAN1_41
-    #     # plt.savefig('/Users/pdelacour/Documents/PL_Ecole/beta_vae/saved_data/masks/van1_41/micro_no_labels1_41.png',bbox_inches='tight', dpi=300)
-
-    #     #### VAN1_31
-    #     # plt.savefig('/Users/pdelacour/Documents/PL_Ecole/beta_vae/saved_data/masks/van1_31/micro_no_labels1_31.png',bbox_inches='tight', dpi=300)
-
-    #     #### VAN1_35
-    #     # TODO: Change the path
-    #     plt.savefig(
-    #         "/Users/pdelacour/Documents/PL_Ecole/beta_vae/saved_data/masks/van1_35/micro_no_labels1_35.png",
-    #         bbox_inches="tight",
-    #         dpi=300,
-    #     )
-
-    #     ## Add the masks
-    #     # VAN1_41
-    #     transform_van = Affine2D(np.array(M))
-    #     # VAN1_31 & VAN1_35
-    #     transform_van = Affine2D(np.array(M)) + Affine2D().rotate(np.pi / 2)
-
-    #     # rotation = Affine2D().rotate(90)
-    #     # # Create Affine2D with the rotated matrix
-    #     # transform_van = Affine2D(np.array(M)).concatenate(rotation)
-
-    #     self.do_plot(ax, mask, transform_van, cmap_col)
-    #     for axins in axs:
-    #         self.do_plot(axins, mask, transform_van, cmap_col)
-    #     names = ["", "", ""]
-    #     # create a patch (proxy artist) for every color
-    #     patches = [mpatches.Patch(color=colors[i], label=names[i]) for i in range(3)]
-    #     # put those patched as legend-handles into the legend
-    #     plt.legend(handles=patches, bbox_to_anchor=(0, 0), loc=2, borderaxespad=0.0, fontsize="40")
-    #     # Add a legend with empty names
-
-    #     ### Kidney
-    #     # plt.savefig('/Users/pdelacour/Documents/PL_Ecole/beta_vae/saved_data/masks/micro_with_labels.png',bbox_inches='tight', dpi=300)
-
-    #     #### VAN1_41
-    #     # plt.savefig('/Users/pdelacour/Documents/PL_Ecole/beta_vae/saved_data/masks/van1_41/micro_with_labels1_41.png',bbox_inches='tight', dpi=300)
-
-    #     #### VAN1_31
-    #     # plt.savefig('/Users/pdelacour/Documents/PL_Ecole/beta_vae/saved_data/masks/van1_31/micro_with_labels1_31.png',bbox_inches='tight', dpi=300)
-
-    #     #### VAN1_35
-    #     plt.savefig(
-    #         "/Users/pdelacour/Documents/PL_Ecole/beta_vae/saved_data/masks/van1_35/micro_with_labels1_35.png",
-    #         bbox_inches="tight",
-    #         dpi=300,
-    #     )
-
-    # def plot_complete_micro(self):
-    #     ### Load microscopy
-    #     ## Kidney
-    #     # microscopy_path = "/Users/pdelacour/Documents/PL_Ecole/beta_vae/saved_data/masks/VAN0046-LK-3-45-PAS-registered.ome.tiff"
-    #     # json_file = "/Users/pdelacour/Documents/PL_Ecole/beta_vae/saved_data/masks/2023_05_VAN0046_microscopy_multiple_files_transform_v2.i2m.json"
-    #     # PATH = '/Users/pdelacour/Documents/PL_Ecole/beta_vae/saved_data/masks/'
-    #     # names = ['glomerulus','pr1','pr2','coll_duct','thick_Ascend','funky_gl']
-    #     # colors = ['darkorange',"blue", "#6DCC8C", 'black','#a30000','#f44e97','#6a329f']
-
-    #     ### VAN1_41
-    #     # microscopy_path = "/Users/pdelacour/Documents/PL_Ecole/beta_vae/saved_data/masks/van1_41/VAN0063-RK-1-41-PAS_to_postAF_registered.ome.tiff"
-    #     # #json_file = "/Users/pdelacour/Documents/PL_Ecole/beta_vae/saved_data/masks/van1_41/old_mask/van1_41_transform.i2r.json"
-    #     # json_file = "/Users/pdelacour/Documents/PL_Ecole/beta_vae/saved_data/masks/van1_41/VAN0063-RK-1-41_transform.v2.i2r.json"
-    #     # PATH = '/Users/pdelacour/Documents/PL_Ecole/beta_vae/saved_data/masks/van1_41/'
-    #     # names = ['glomerulus','pr1','pr2','coll_duct','thick_Ascend']
-    #     # colors = ['#F96E46','black', '#a30000', "#F9C846","#6DCC8C",'#f44e97','#6a329f'] #Burnt sienna(orange), black , ... , Saffron(yellow)
-
-    #     ### VAN1_31
-    #     # microscopy_path = "/Users/pdelacour/Documents/PL_Ecole/beta_vae/saved_data/masks/van1_31/VAN0042-RK-1-31-PAS_to_postAF_registered.ome.tiff"
-    #     # #json_file = "/Users/pdelacour/Documents/PL_Ecole/beta_vae/saved_data/masks/van1_31/old_mask/van1_31_transform.i2r.json"
-    #     # json_file = "/Users/pdelacour/Documents/PL_Ecole/beta_vae/saved_data/masks/van1_31/VAN0042-RK-1-31_transform.v2.i2r.json"
-    #     # PATH = '/Users/pdelacour/Documents/PL_Ecole/beta_vae/saved_data/masks/van1_31/'
-    #     # #names = ['glomerulus','pr1','pr2']
-    #     # names = ['glomerulus','pr1','pr2','coll_duct','thick_Ascend']
-    #     # colors = ['#F96E46','black', '#a30000', "#F9C846","#6DCC8C",'#f44e97','#6a329f'] #Burnt sienna(orange), black , ... , Saffron(yellow)
-
-    #     ### VAN1_35
-    #     microscopy_path = "/Users/pdelacour/Documents/PL_Ecole/beta_vae/saved_data/masks/van1_35/VAN0049-RK-1-35-PAS_to_postAF_registered.ome.tiff"
-    #     # json_file = "/Users/pdelacour/Documents/PL_Ecole/beta_vae/saved_data/masks/van1_35/old_mask/van1_35_transform.i2r.json"
-    #     json_file = "/Users/pdelacour/Documents/PL_Ecole/beta_vae/saved_data/masks/van1_35/VAN0049-RK-1-35_transform.v2.i2r.json"
-    #     PATH = "/Users/pdelacour/Documents/PL_Ecole/beta_vae/saved_data/masks/van1_35/"
-    #     # names = ['glomerulus','pr1','pr2',]
-    #     names = ["glomerulus", "pr1", "pr2", "coll_duct", "thick_Ascend"]
-    #     colors = [
-    #         "#F96E46",
-    #         "black",
-    #         "#a30000",
-    #         "#F9C846",
-    #         "#6DCC8C",
-    #         "#f44e97",
-    #         "#6a329f",
-    #     ]  # Burnt sienna(orange), black , ... , Saffron(yellow)
-
-    #     image = io.imread(microscopy_path)
-
-    #     ### ADD this to remove black artefacts in VAN1_31
-    #     image[np.sum(image, axis=2) == 0, :] = 150
-
-    #     ## Load the masks
-    #     f = open(json_file)
-    #     data = json.load(f)
-    #     M = data["matrix_xy_px"]
-
-    #     names_files = dict(zip(range(len(names)), names))
-    #     masks = []
-    #     for l in range(len(names)):
-    #         with open(PATH + f"mask_{names_files[l]}.npy", "rb") as f:
-    #             masks.append(np.load(f))
-
-    #     ## Combined the masks
-    #     mask = masks[0]
-    #     for i in range(1, len(names)):
-    #         mask = mask + (i + 1) * np.copy(masks[i]).astype("float32")
-    #     mask[mask == 0] = np.nan
-    #     cmap_col = colors_mat.ListedColormap(colors[: len(names)])
-
-    #     # with_label =True
-    #     f, ax = plt.subplots(figsize=(20, 15))
-    #     f.patch.set_visible(False)
-
-    #     ## Plot the image on main axis
-    #     im = ax.imshow(image)
-    #     ax.axis("off")
-
-    #     ### VAN1_35
-    #     trans_data = Affine2D().rotate(np.pi / 2) + ax.transData
-    #     im.set_transform(trans_data)
-    #     limits = np.array((11000, 21000, 4400, 10950))  # x1 , x2 , y1 , y2
-    #     # width = 280
-    #     # height = 320
-    #     # width = (limits[1]-limits[0])*0.05
-    #     offset = -5400
-    #     ax.set_xlim(limits[0] - image.shape[0] + offset, limits[1] - image.shape[0] + offset)
-    #     ax.set_ylim(limits[3], limits[2])
-
-    #     ### VAN1_31
-    #     # print('## Before = ' , image.shape)
-    #     # trans_data = Affine2D().rotate(np.pi/2)+ ax.transData
-    #     # im.set_transform(trans_data)
-    #     # print('## After = ', image.shape)
-    #     # limits = np.array((13645, 19037,5972, 18231)) # x1 , x2 , y1 , y2
-    #     # ## Rotate the limit
-    #     # limits = np.array((5972, 18231,13645, 19037))
-    #     # width = (limits[1]-limits[0])*0.05
-    #     # offset = 3000
-    #     # ax.set_xlim(limits[0]-image.shape[0]+offset,limits[1]-image.shape[0]+offset)
-    #     # ax.set_ylim(limits[3],limits[2])
-
-    #     ### VAN1_41
-
-    #     # limits = np.array((511, 13100, 4700, 10300)) # x1 , x2 , y1 , y2
-    #     # #width = 280
-    #     # #height = 320
-    #     # #width = (limits[1]-limits[0])*0.05
-    #     # ax.set_xlim(limits[0],limits[1])
-    #     # ax.set_ylim(limits[3],limits[2])
-
-    #     # cmap_col = colors_mat.ListedColormap( colors)
-    #     # cmap_col = colors_mat.ListedColormap(['white'] + colors[:len(names)])
-
-    #     ## Plot the mask
-    #     # VAN1_41
-    #     transform_van = Affine2D(np.array(M))
-    #     # VAN1_31 & VAN1_35
-    #     transform_van = Affine2D(np.array(M)) + Affine2D().rotate(np.pi / 2)
-
-    #     # rotation = Affine2D().rotate(90)
-    #     # # Create Affine2D with the rotated matrix
-    #     # transform_van = Affine2D(np.array(M)).concatenate(rotation)
-
-    #     self.do_plot(ax, mask, transform_van, cmap_col)
-    #     ### Kidney
-    #     # plt.savefig('/Users/pdelacour/Documents/PL_Ecole/beta_vae/saved_data/masks/micro_with_labels.png',bbox_inches='tight', dpi=300)
-
-    #     #### VAN1_41
-    #     # plt.savefig('/Users/pdelacour/Documents/PL_Ecole/beta_vae/saved_data/masks/van1_41/micro_complete_1_41.png',bbox_inches='tight', dpi=300)
-
-    #     #### VAN1_31
-    #     # plt.savefig('/Users/pdelacour/Documents/PL_Ecole/beta_vae/saved_data/masks/van1_31/micro_complete_1_31.png',bbox_inches='tight', dpi=300)
-
-    #     #### VAN1_35
-    #     # plt.savefig('/Users/pdelacour/Documents/PL_Ecole/beta_vae/saved_data/masks/van1_35/micro_complete_1_35.png',bbox_inches='tight', dpi=300)
-    #     # TODO: change path
-    #     plt.savefig(
-    #         "/Users/pdelacour/Documents/PL_Ecole/beta_vae/saved_data/masks/van1_35/micro_complete_extent_1_35.png",
-    #         bbox_inches="tight",
-    #         dpi=300,
-    #     )
-
-    #'837.54'
-    def plot_mz(self, mz=None):
-        if mz is None:
-            mz = ["837.54", "1281", "885.54", "714.50"]
-        centroids, _, pixel_index = dat.load()  # original data
-        image_shape, norm, mzs = dat.load_shape_norm_mzs()
-        index = 2
-
-        mz = [str(a) for a in mzs]
-
-        for m in mz:
-            mzs2 = np.array([m in str(a) for a in mzs])
-            # index = np.where(mzs2 == mz)[0][0]
-            index = np.where(mzs2)[0][0]
-
-            ## Plot the desired mz spatial view
-            _, ax = plt.subplots(figsize=(10, 10))
-            image = dat.reshape_array(centroids[:, index] / norm, image_shape, pixel_index)
-            image = np.flip(image, axis=(0, 1))
-
-            ## Clip the top 5% largest values:
-            image[np.isnan(image)] = 0
-            p = 0.97
-            q = np.quantile(image, p)
-            image = np.clip(image, a_min=0, a_max=q)
-
-            ### VAN1_41
-            ax.imshow(image)
-            ### VAN1_35
-            # image_rot = image[::-1,:]
-            # image_rot = image_rot.T
-            # ax.imshow(image_rot)
-
-            ax.tick_params(axis="x", labelsize=20)
-            ax.tick_params(axis="y", labelsize=20)
-
-            ## Add an arrow for the size
-            ### 1 pixel is 10 micro m
-            arrow_size = 100
-            # Lower right
-            x_loc = image.shape[1] - 110
-            y_loc = image.shape[0] - 15
-            # Upper right
-            x_loc = image.shape[1] - 110
-            y_loc = 10
-            
-            rect = mpatches.Rectangle(
-                (x_loc, y_loc), arrow_size, 8, linewidth=1.5, edgecolor="black", facecolor="white"
-            )
-            ax.add_patch(rect)
-            
-            #### loc in upper right
-            ax.text(
-                x_loc + 9,
-                y_loc + 24,
-                f"{arrow_size * 10} \u03bcm",
-                color="white",
-                fontsize=15,
-                path_effects=[patheffects.withStroke(linewidth=3, foreground="black")],
-            )
-            ###
-            # TODO: change path
-            plt.savefig(
-                f"/Users/pdelacour/Documents/PL_Ecole/beta_vae/saved_data/masks/mzs/mzs_{mzs[index]}.png",
-                bbox_inches="tight",
-                dpi=300,
-            )
-
-    # def plot_spectrum(self, loader):
-    #     Path(r"data/negative/VAN0005-RK-2-5-IMS_lipids_neg_roi=#0_mz=fix")
-    #     Path(r"data/negative/VAN0042-RK-1-31-IMS_lipids_neg_roi=#1_mz=fix")
-    #     data_dir1_35 = Path(r"data/negative/VAN0049-RK-1-35-IMS_lipids_neg_roi=#1_mz=fix")
-    #     Path(r"data/negative/VAN0063-RK-1-41-IMS_lipids_neg_roi=#1_mz=fix")
-    #     # path_points = 'saved_data/van1_41/points_to_n_steps.pkl'
-
-    #     data_dir = data_dir1_35
-
-    #     x, _ = next(iter(loader))
-    #     _, mzs = dat.load_centroids(data_dir)
-
-    #     ## Subset of x_ticks that are going to be ploted
-    #     subset = np.arange(0, x.shape[2], step=8)
-    #     for i in range(x.shape[0]):
-    #         plt.figure()
-    #         plotdata = pd.DataFrame({"intensity": x[i, 0, :].detach().numpy()}, index=mzs)
-    #         ax = plotdata.plot(kind="bar", color="#036512", figsize=(15, 5))
-    #         ax.set_xticks(subset)
-    #         ax.set_xticklabels(mzs[subset], rotation=45, ha="right")
-    #         ax.tick_params(axis="x", labelsize=17)
-    #         ax.set_xlabel("$m/z$", fontsize=20)
-    #         ax.legend().set_visible(False)
-    #         ax.set_ylabel("Intensity", fontsize=20)
-    #         # plt.savefig('/Users/pdelacour/Documents/PL_Ecole/beta_vae/saved_data/masks/van1_35/spectra/spectrum_{}.png'.format(i), bbox_inches='tight',dpi=300)
-    #         plt.close()
