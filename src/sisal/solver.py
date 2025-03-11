@@ -12,30 +12,23 @@ from sisal.utils import compute_estimate_std, metric_disentangling, reparametriz
 
 logger = logging.getLogger()
 
-# def reparametrize(mu, logvar):
-#         std = logvar.div(2).exp()
-#         eps = Variable(std.data.new(std.size()).normal_())
-#         return mu + std*eps
 
 
 class Solver:
-    def __init__(self, args, in_size):
-        # timestamp = datetime.now().strftime('%d%m%Y_%H%M%S')
-        # self.writer = SummaryWriter('runs/fashion_trainer_{}'.format(timestamp))
+    def __init__(self,beta,z_dim,in_size,epochs,device,save_model_epochs=False,save_loss=False,train=True):
 
-        self.device = torch.device(args.device)
-        self.z_dim = args.z_dim
-        self.model = BetaVAE(args.z_dim, in_size).to(self.device)
-        self.save_epochs = args.save_model_epochs
-        self.epochs = args.epochs
-        self.train_bool = args.train
-        self.beta = args.beta
-        self.save_loss = args.save_loss
+        self.device = torch.device(device)
+        self.z_dim = z_dim
+        self.model = BetaVAE(z_dim, in_size).to(self.device)
+        self.save_epochs = save_model_epochs
+        self.epochs = epochs
+        self.train_bool = train
+        self.beta = beta
+        self.save_loss = save_loss
 
     ## Average KL over the batch
     def KL(self, mu, logvar):
         logvar = logvar.view(logvar.size(0), logvar.size(1))
-        # KL = 0.5*(mu.pow(2).sum() - logvar.sum() + logvar.exp().sum() - d*batch_size).div(batch_size)
         klds = 0.5 * (mu.pow(2) + logvar.exp() - logvar - 1)
         return klds.sum(1).mean(0)
 
@@ -156,7 +149,6 @@ class Solver:
                 running_vloss = 0.0
                 with torch.no_grad():
                     for x, _ in validation_loader:
-                        # x = x.to(self.device)
                         x = x.to(self.device, non_blocking=True)
                         z_mean, z_logvar = self.model.forward(x)
                         z = reparametrize(z_mean, z_logvar)
@@ -174,8 +166,6 @@ class Solver:
                     early_stop = 0
                     best_vloss = avg_vloss
                     torch.save(self.model, path)
-                    # if self.save_epochs:
-                    #     torch.save(self.model, 'model/model_weight_epoch_{}.pth'.format(epoch+1))
 
                 else:
                     early_stop += 1
