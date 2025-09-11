@@ -91,7 +91,7 @@ class Plot:
                     y=full_latent[mask, 1],
                     s=0.01,
                     alpha=0.8,
-                    c=col_dict[i],
+                    color=col_dict[i],
                     label=mask_to_name[i],
                 )
             for i in range(vars.shape[0]):
