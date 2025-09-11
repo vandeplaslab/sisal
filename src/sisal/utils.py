@@ -423,7 +423,7 @@ def normalize_train_test_full_loader_given_index(
         loader = torch.utils.data.DataLoader(
             [[v[j], mask[j]] for j in range(v.shape[0])],
             shuffle=False,
-            num_workers=3,
+            num_workers=0, #3,
             batch_size=batch_size,
             pin_memory=True,
             drop_last=True,
