@@ -1,7 +1,7 @@
 #Data folder
 data/*
 !data/.gitkeep
-
+sisal/*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
