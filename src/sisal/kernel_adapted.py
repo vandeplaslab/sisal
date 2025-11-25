@@ -1,8 +1,10 @@
+"""Module for kernel adapted density estimation and plotting."""
+
 import matplotlib.pyplot as plt
 import numpy as np
 
 
-def kernel_adapated(full_latent, vars):
+def kernel_adapated(full_latent: np.ndarray, vars: np.ndarray) -> np.ndarray:
     X, Y = np.mgrid[-4:4:200j, -4:4:200j]
     grid = np.vstack([X.ravel(), Y.ravel()])
     im_size = len(X[0])
@@ -27,7 +29,7 @@ def kernel_adapated(full_latent, vars):
     return image_r
 
 
-def plot_kernel_adapted(ax, fig, image):
+def plot_kernel_adapted(ax: plt.Axes, fig: plt.Figure, image: np.ndarray) -> None:
     # np.rot90(image_r)
     # fig,ax = plt.subplots(figsize=(10,10))
     im = ax.imshow(image, extent=[-4, 4, -4, 4], cmap="jet")
@@ -37,6 +39,3 @@ def plot_kernel_adapted(ax, fig, image):
     ax_cbar = fig.add_axes([p[0], 0.95, p[2] - p[0], 0.05])
     cb = plt.colorbar(im, cax=ax_cbar, orientation="horizontal")
     cb.ax.tick_params(labelsize=20)
-
-
-# plt.savefig('plots/carving/kde/new_kde.png',bbox_inches='tight',dpi=300)

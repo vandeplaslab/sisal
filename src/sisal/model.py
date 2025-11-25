@@ -1,3 +1,5 @@
+"""Model."""
+
 import numpy as np
 import torch.nn as nn
 
@@ -17,7 +19,7 @@ def l_out(l_in, ker, stride, pad):
 
 
 class BetaVAE(nn.Module):
-    def __init__(self, z_dim, in_size):
+    def __init__(self, z_dim: int, in_size: int):
         super().__init__()
         self.latent_std_min = 10  # so that the min variance is >=  e^{-10}
         self.z_dim = z_dim
@@ -82,15 +84,9 @@ class BetaVAE(nn.Module):
                 if isinstance(m, (nn.Conv1d, nn.ConvTranspose1d, nn.Linear)):
                     pass
 
-
-if __name__ == "__main__":
-    pass
-
-
 class BetaVAESynthetic(BetaVAE):
-    def __init__(self, z_dim):
-        super().__init__(z_dim)
-        self.z_dim = z_dim
+    def __init__(self, z_dim: int, in_size: int = 5):
+        super().__init__(z_dim, in_size)
         # Param : q_\phi = N(0,diag(\sigma^2)) model covariance as diagonal
         self.encoder = nn.Sequential(
             nn.Conv1d(1, 10, 3, stride=1, padding=1),  # 10 * 5

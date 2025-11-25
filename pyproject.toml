@@ -12,7 +12,7 @@ build-backend = "setuptools.build_meta"
 name = "sisal"
 description = "short description"
 readme = "README.md"
-requires-python = ">=3.8"
+requires-python = ">=3.9"
 license = { text = "BSD 3-Clause License" }
 authors = [
     { email = "delacourpaullouis@gmail.com", name = "Paul-Louis Delacour" },
@@ -46,9 +46,11 @@ dependencies = [
 # extras
 # https://peps.python.org/pep-0621/#dependencies-optional-dependencies
 [project.optional-dependencies]
+demo = [
+    "jupyterlab"
+]
 test = ["pytest>=6.0", "pytest-cov"]
 dev = [
-    "black",
     "ipython",
     "mypy",
     "pdbpp",
@@ -74,13 +76,6 @@ repository = "https://github.com/pauldelacour/sisal"
 
 [tool.setuptools_scm]
 write_to = "src/sisal/_version.py"
-
-# https://github.com/psf/black
-[tool.black]
-line-length = 120
-target-version = ['py37', 'py38', 'py39']
-include = '\.pyi?$'
-
 
 # https://github.com/charliermarsh/ruff
 [tool.ruff]
@@ -184,5 +179,6 @@ ignore = [
     "dist/**/*",
     "build/**/*",
     "docs/**/*",
+    "tutorials/*.ipynb",
     "makefile",
 ]

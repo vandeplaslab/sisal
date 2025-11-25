@@ -1,29 +1,22 @@
 from __future__ import annotations
 
-import json
 from itertools import groupby
 from pathlib import Path
 
 import cmasher as cmr
 import imageio
 import matplotlib as mpl
-import matplotlib.colors as colors_mat
-import matplotlib.patches as mpatches
-import matplotlib.patheffects as patheffects
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import skimage.io as io
 import torch
 import torch.nn.functional as F
 from matplotlib import path as m_path
 from matplotlib.patches import Ellipse, Polygon
-from matplotlib.transforms import Affine2D
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from mpl_toolkits.axes_grid1.inset_locator import mark_inset
 from scipy import stats
 
-from sisal.kernel_adapted import kernel_adapated, plot_kernel_adapted
 from sisal.utils import compute_latent, compute_loss, reparametrize
 
 mpl.rcParams.update(mpl.rcParamsDefault)
@@ -64,7 +57,6 @@ class Plot:
         if output_dir is None:
             output_dir = Path(path).parent
         self.output_dir = Path(output_dir)
-
 
     def get_cov_ellipse(self, z_mean, z_var, nstd, color, **kwargs):
         # Width and height of ellipse to draw
@@ -126,8 +118,6 @@ class Plot:
         self.scatter_with_covar(ax, full_latent[:, 1:], vars, label, col_dict, mask_to_name)
         plt.close()
 
-    
-
     ## p:proportions of all points plotted
     # Plot for the synthetic data in which we know the scaling value (SNR)
     # Plot the scaling values in latent space
@@ -166,7 +156,6 @@ class Plot:
 
         fig, ax = plt.subplots(figsize=(10, 10))
         sc = ax.scatter(x=full_latent[:, 1], y=full_latent[:, 2], c=alpha_label, alpha=0.5, cmap="viridis")
-
 
     def sample_one_reconstruction(self, x):
         with torch.no_grad():
@@ -444,7 +433,7 @@ class Plot:
                 z_next = z_list[idx_closest, 1:]
                 idx_next = z_list[idx_closest, 0]
                 return z_next, idx_next
-        return z_curr, idx_curr  
+        return z_curr, idx_curr
 
     def compute_full_trajectory(self, fa, z_start, idx_start, t, n_steps, full_latent):
         z_arr1, idx_arr1 = self.compute_trajectory(fa, z_start, idx_start, t, n_steps, full_latent, mode="forward")
@@ -503,7 +492,6 @@ class Plot:
     #                 d_pos = index_to_pos[z_next] - x
     #                 plt.quiver(x[0], x[1], d_pos[0], d_pos[1], scale_units="xy", angles="xy", scale=1, alpha=0.8)
 
-
     # def index_to_mask(self):
     #     loader, _ = dat.full_index_normalized_data()
     #     id_mask = {}
@@ -549,7 +537,6 @@ class Plot:
                 axs[j].legend().get_frame().set_linewidth(0.0)
                 axs[j].legend(title=r"$\beta$", bbox_to_anchor=(1, 1), loc="upper left")
 
-
     def plot_spatial(self, indices):
         ############# For kidney data
         ## Draw image mask on one mzs in the bottom
@@ -584,7 +571,6 @@ class Plot:
             for j, ind in enumerate(index_mask):
                 masks[int(pos[j, 0]), int(pos[j, 1])] = i + 1
         return masks
-
 
     def plot_kernel_density_estimation(self, full_latent, vars, label, mask_to_name, title=""):
         _, ax = plt.subplots(nrows=2, ncols=2, figsize=(15, 15))
@@ -622,7 +608,6 @@ class Plot:
                     ax[0, 0].set_ylim(-4, 4)
                 else:
                     self.kernel_density(ax[i, j], kernel, factors[i, j], grid, X.shape)
-
 
     def kernel_density(self, ax, fig, kernel, factor, grid, shape):
         kernel.set_bandwidth(bw_method=factor)

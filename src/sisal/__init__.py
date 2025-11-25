@@ -1,4 +1,4 @@
-"""short description."""
+"""Init."""
 
 from importlib.metadata import PackageNotFoundError, version
 

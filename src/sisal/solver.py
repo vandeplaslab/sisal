@@ -13,10 +13,8 @@ from sisal.utils import compute_estimate_std, metric_disentangling, reparametriz
 logger = logging.getLogger()
 
 
-
 class Solver:
-    def __init__(self,beta,z_dim,in_size,epochs,device,save_model_epochs=False,save_loss=False,train=True):
-
+    def __init__(self, beta: float, z_dim: int, in_size: int, epochs: int, device: str, save_model_epochs: bool=False, save_loss: bool=False, train: bool=True):
         self.device = torch.device(device)
         self.z_dim = z_dim
         self.model = BetaVAE(z_dim, in_size).to(self.device)
@@ -33,7 +31,7 @@ class Solver:
         return klds.sum(1).mean(0)
 
     ##Average recons over the batch
-    def reconstruction_loss(self, x, mu_x):
+    def reconstruction_loss(self, x: torch.Tensor, mu_x: torch.Tensor) -> torch.Tensor:
         # - \E_{z \sim q_\phi(z|x)}(\log p_\theta(x|z))
         # Model to start
         # Param : q_\phi = N(0,diag(\sigma^2)), p_\theta(z) = N(0,I) , p_\theta(x|z) = N(\mu, I)
@@ -42,10 +40,10 @@ class Solver:
         r_loss = 0.5 * F.mse_loss(x, mu_x, reduction="sum").div(batch_size)
         return r_loss
 
-    def loss(self, beta, x, z_mean, z_logvar, decoder_mean):
+    def loss(self, beta: float, x: torch.Tensor, z_mean: torch.Tensor, z_logvar: torch.Tensor, decoder_mean: torch.Tensor) -> torch.Tensor:
         return self.reconstruction_loss(x, decoder_mean) + beta * self.KL(z_mean, z_logvar)
 
-    def train_one_epoch(self, epoch_index, dataloader):
+    def train_one_epoch(self, epoch_index: int, dataloader):
         c = 0
         optim = Adam(self.model.parameters(), lr=0.001, weight_decay=0.0001)
 
