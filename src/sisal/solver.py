@@ -14,7 +14,17 @@ logger = logging.getLogger()
 
 
 class Solver:
-    def __init__(self, beta: float, z_dim: int, in_size: int, epochs: int, device: str, save_model_epochs: bool=False, save_loss: bool=False, train: bool=True):
+    def __init__(
+        self,
+        beta: float,
+        z_dim: int,
+        in_size: int,
+        epochs: int,
+        device: str,
+        save_model_epochs: bool = False,
+        save_loss: bool = False,
+        train: bool = True,
+    ):
         self.device = torch.device(device)
         self.z_dim = z_dim
         self.model = BetaVAE(z_dim, in_size).to(self.device)
@@ -40,7 +50,9 @@ class Solver:
         r_loss = 0.5 * F.mse_loss(x, mu_x, reduction="sum").div(batch_size)
         return r_loss
 
-    def loss(self, beta: float, x: torch.Tensor, z_mean: torch.Tensor, z_logvar: torch.Tensor, decoder_mean: torch.Tensor) -> torch.Tensor:
+    def loss(
+        self, beta: float, x: torch.Tensor, z_mean: torch.Tensor, z_logvar: torch.Tensor, decoder_mean: torch.Tensor
+    ) -> torch.Tensor:
         return self.reconstruction_loss(x, decoder_mean) + beta * self.KL(z_mean, z_logvar)
 
     def train_one_epoch(self, epoch_index: int, dataloader):

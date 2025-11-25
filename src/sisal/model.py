@@ -21,6 +21,9 @@ def l_out(l_in, ker, stride, pad):
 class BetaVAE(nn.Module):
     def __init__(self, z_dim: int, in_size: int):
         super().__init__()
+        if in_size < 19:
+            raise ValueError("Input size too small for BetaVAE, should be at least 19")
+
         self.latent_std_min = 10  # so that the min variance is >=  e^{-10}
         self.z_dim = z_dim
 
@@ -83,6 +86,7 @@ class BetaVAE(nn.Module):
             for m in self._modules[block]:
                 if isinstance(m, (nn.Conv1d, nn.ConvTranspose1d, nn.Linear)):
                     pass
+
 
 class BetaVAESynthetic(BetaVAE):
     def __init__(self, z_dim: int, in_size: int = 5):

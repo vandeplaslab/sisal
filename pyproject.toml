@@ -181,4 +181,5 @@ ignore = [
     "docs/**/*",
     "tutorials/*.ipynb",
     "makefile",
+    "images/**/*",
 ]

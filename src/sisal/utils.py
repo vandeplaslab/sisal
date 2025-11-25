@@ -377,7 +377,8 @@ def normalize_train_test_full_loader_given_index(
     Args:
     ----
         centroids (np.ndarray): A NumPy array of shape (n_points, n_dim) representing the data points.
-        pixel_index (np.ndarray): A NumPy array of shape (n_points, n_dim) representing the a chosen index (in our case : pixel where the IMS was acquired)
+        pixel_index (np.ndarray): A NumPy array of shape (n_points, n_dim) representing the a chosen index
+        (in our case : pixel where the IMS was acquired)
         masks (np.ndarray) : A NumPy array of shape (n_points) representing the mask (if unknown set all to 1)
         batch_size (int, optional): The batch size for the DataLoader. Defaults to 32.
         alpha (np.ndarray) : A NumPy array of shape (n_points) representing the alpha (SNR) value if it is known

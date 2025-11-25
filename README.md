@@ -1,10 +1,10 @@
 # sisal
 
-[![License](https://img.shields.io/pypi/l/sisal.svg?color=green)](https://github.com/pauldelacour/sisal/raw/main/LICENSE)
+[![License](https://img.shields.io/pypi/l/sisal.svg?color=green)](https://github.com/vandeplaslab/sisal/raw/main/LICENSE)
 [![PyPI](https://img.shields.io/pypi/v/sisal.svg?color=green)](https://pypi.org/project/sisal)
 [![Python Version](https://img.shields.io/pypi/pyversions/sisal.svg?color=green)](https://python.org)
-[![CI](https://github.com/pauldelacour/sisal/actions/workflows/ci.yml/badge.svg)](https://github.com/pauldelacour/sisal/actions/workflows/ci.yml)
-[![codecov](https://codecov.io/gh/pauldelacour/sisal/branch/main/graph/badge.svg)](https://codecov.io/gh/pauldelacour/sisal)
+[![CI](https://github.com/vandeplaslab/sisal/actions/workflows/ci.yml/badge.svg)](https://github.com/vandeplaslab/sisal/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/vandeplaslab/sisal/branch/main/graph/badge.svg)](https://codecov.io/gh/vandeplaslab/sisal)
 
 The SiSAL package is an approach based on the beta-variational autoencoder and kernel density estimation
 to dissect data along independent, uncertainty-aware, and interpretable (yet non-linear) latent axes. 
@@ -21,7 +21,7 @@ chemical insight.
 Contributions are always welcome. Please feel free to submit PRs with new features, bug fixes, or documentation improvements.
 
 ```bash
-git clone https://github.com/pauldelacour/sisal.git
+git clone https://github.com/vandeplaslab/sisal.git
 
 pip install -e .[dev]
 ```
