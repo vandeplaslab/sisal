@@ -16,6 +16,22 @@ The approach’s disentangling properties are shown to impress a latent space st
 that separates signal strength from relative signal content, offering exceptional
 chemical insight. 
 
+## Installing
+
+You can install sisal from PyPI:
+
+```bash
+pip install sisal
+```
+
+or directly from source:
+
+```bash
+git clone https://github.com/vandeplaslab/sisal.git
+
+pip install "."
+```
+
 ## Contributing
 
 Contributions are always welcome. Please feel free to submit PRs with new features, bug fixes, or documentation improvements.
@@ -26,14 +42,6 @@ git clone https://github.com/vandeplaslab/sisal.git
 pip install -e .[dev]
 ```
 
-
-## Installing
-
-You can install sisal from PyPI:
-
-```bash
-pip install sisal
-```
 
 ## Examples
 
