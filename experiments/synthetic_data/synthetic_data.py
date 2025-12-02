@@ -396,6 +396,6 @@ def return_synthetic_data():
 
     # The alpha value (SNR) of the spectrum
     # COMPUTE the SNR named alpha which is the norm of the spectrum signal
-    SNR = np.linalg.norm(data, axis=1) / (eps_scale**2 * data.shape[1])
+    SNR = np.linalg.norm(data, axis=1)**2 / (eps_scale**2 * data.shape[1])
 
     return centroids, SNR, mask.flatten(), mask_to_name_synthetic()
