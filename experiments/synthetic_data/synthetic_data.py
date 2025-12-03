@@ -1,15 +1,8 @@
 import cmasher as cmr
 import matplotlib.pyplot as plt
 import numpy as np
-
-# import torch
-# import pandas as pd
-# from sklearn.preprocessing import StandardScaler
-# from sklearn.decomposition import PCA
-# import matplotlib.colors as mcolors
 from matplotlib.colors import LinearSegmentedColormap
 
-# eps_scale = 2
 eps_scale = 10
 coeff_scale = 2
 coeff_loc = 2
@@ -137,7 +130,6 @@ def create_image_new(eps_scale, coeff_scale, coeff_loc):
     np.random.seed(seed=3868)
     for i in range(image_shape[0]):
         for j in range(image_shape[1]):
-            # print(t.is_in(i,j))
             in_c = c.is_in(i, j)
             in_t = t.is_in(i, j)
             in_s = s.is_in(i, j)
@@ -174,10 +166,8 @@ def plot_spatial_separate(mask, image_circle, image_triangle, image_square):
     ax[0].imshow(mask, cmap=get_colormap())
     # plt.savefig('plots/synthetic_data/complete/spatial_pattern.png',bbox_inches='tight',dpi=300)
 
-    # _,ax = plt.subplots(figsize =(15,15))
     images = [image_circle, image_triangle, image_square]
     for i, image in enumerate(images):
-        # _,ax = plt.subplots(figsize=(8,5))
         ax[i + 1].tick_params(axis="x", labelsize=25)
         ax[i + 1].tick_params(axis="y", labelsize=25)
         #####
@@ -203,28 +193,6 @@ def plot_synthetic():
 
     spectrums, spectrum_names = create_spectrum(in_size)
     plot_spectral_separate(spectrums, spectrum_names)
-
-
-# images = [circle, triangle,square]
-# def plot_spatial_separate_past(eps_scale=eps_scale , coeff_scale=coeff_scale , coeff_loc=coeff_loc ):
-#     image_circle, image_triangle, image_square,mask = create_image(eps_scale,coeff_scale,coeff_loc)
-#     images = [image_circle, image_triangle, image_square]
-#     _, ax = plt.subplots(2,2,figsize=(8, 5))
-#     #print(len(images))
-
-#     ax[0,0].imshow(mask,cmap=cmap_spa)
-#     ax[0,0].title.set_text(r"Param $\epsilon \sim N(0,{}^2), c,t,s \sim N({},{}^2)$".format(eps_scale,coeff_loc,coeff_scale))
-#     ax[1,0].imshow(images[0])
-#     ax[1,0].title.set_text('Circle coeff')
-#     ax[0,1].imshow(images[1])
-#     ax[0,1].title.set_text('Triangle coeff')
-#     ax[1,1].imshow(images[2])
-#     ax[1,1].title.set_text('Square coeff')
-# plt.title(r"$\epsilon \sim N(0,{}^2), c,t,s \sim N({},{}^2)$".format(eps_scale,coeff_loc,coeff_scale))
-
-# ax[1].title.set_text(r"$\epsilon \sim N(0,{}^2), c,t,s \sim N({},{}^2)$".format(eps_scale,coeff_loc,coeff_scale))
-# plt.savefig('plots/synthetic_data/separate_coeff.png',bbox_inches='tight',dpi=300)
-
 
 def plot_spatial_separate2d(eps_scale=eps_scale, coeff_scale=coeff_scale, coeff_loc=coeff_loc):
     _, ax = plt.subplots(nrows=2, figsize=(10, 10))
@@ -389,8 +357,8 @@ def return_synthetic_data():
         + np.outer(image_triangle.flatten(), s[1])
         + np.outer(image_square.flatten(), s[2])
     )
+    
     # Add noise
-
     r = np.random.RandomState(8970)
     centroids = data + r.normal(scale=eps_scale, size=data.shape)
 

@@ -21,20 +21,6 @@ from sisal.utils import compute_latent, compute_loss, reparametrize
 
 mpl.rcParams.update(mpl.rcParamsDefault)
 
-# Computes largest and smallest value for each latent dim of the training data
-# def limit_latent_space( model ,train_loader):
-#     x = next(iter(train_loader))[0]
-#     #x = x.to(device)
-#     z_min = model.forward(x)[0]
-#     z_min = torch.min(z_min, 0)[0]
-#     z_max = z_min
-#     for x,_ in train_loader:
-#         z = model.forward(x)[0]
-#         z_min = torch.minimum(z_min,torch.min(z,0)[0])
-#         z_max = torch.maximum(z_max,torch.max(z,0)[0])
-#     return (z_min.detach().numpy(),z_max.detach().numpy())
-
-
 class Plot:
     def __init__(
         self, path: Path, device: str, train_loader, test_loader, full_loader, output_dir: Path | None = None
@@ -254,9 +240,7 @@ class Plot:
         for i in range(n_points):
             ax.plot(z_start[i, 0], z_start[i, 1], ".")
             z_curr = z_start[i, :]
-            # for _ in range(n_steps) :
             j = 0
-            # path = []
             latent_val = [z_curr]
             while not p2.contains_point(z_curr) and j < n_steps:
                 plt.quiver(z_curr[0], z_curr[1], t, 0, scale_units="xy", angles="xy", scale=1, alpha=0.8)
@@ -377,8 +361,6 @@ class Plot:
         )  # optional: frames per second
 
     def latent_traversal_heatmap(self, f_index, loader, z_min, z_max):
-        # inter =  0.1
-        # inter = 10
         inter = (z_max - z_min) / 100
         x, _ = next(iter(loader))
         interpolation = torch.arange(z_min, z_max, inter)
@@ -406,7 +388,6 @@ class Plot:
     def color_dict(self, n_col=6):
         new_colors = ["#1f77b4", "darkorange", "green", "firebrick", "black", "darkmagenta"]
         ## For SYNTHETIC DATA
-        # n_col = 2**3
         cmap_spa = "cmr.pride"
         new_colors = cmr.take_cmap_colors(cmap_spa, n_col, return_fmt="hex")
         new_colors[-1] = [0.0, 0.5, 1.0, 1.0]  # Set the last color to blue
@@ -460,48 +441,6 @@ class Plot:
 
         return z_arr, idx_arr
 
-    # def draw_latent_connections_on_image(self, fa, z_min, z_max, full_latent, loader, index=151):
-    #     centroids, glomeruls_mask, pixel_index = dat.load()  # original data
-    #     image_shape, norm, mzs = dat.load_shape_norm_mzs()
-
-    #     norm = 1
-    #     # title = 'Spatial_traversal'
-    #     fig, ax = plt.subplots(figsize=(10, 5), nrows=1, constrained_layout=True)
-
-    #     fig.suptitle(f"m/z {mzs[index]:.4f}", fontsize=20)
-
-    #     # ax.imshow(dat.reshape_array(centroids[:, index] / norms[norm], image_shape, pixel_index))
-
-    #     ax.imshow(dat.reshape_array(centroids[:, index] / norm, image_shape, pixel_index))
-    #     ax.imshow(glomeruls_mask, alpha=0.5)
-
-    #     n_steps = 40
-    #     t = (z_max[fa] - z_min[fa]) / 100  # must be multidimensional when z_dim > 2
-    #     x, _, idx_start = next(iter(loader))
-    #     index_to_pos = self.index_to_image_pos(image_shape, pixel_index)
-    #     with torch.no_grad():
-    #         z_mean, _ = self.model.forward(x)
-    #         z_start = z_mean.detach().numpy()
-    #         for i in np.arange(11, 12):
-    #             # ax.plot(z_start[i,0],z_start[i,1] , ".")
-    #             _, z_index = self.compute_trajectory(fa, z_start[i], idx_start[i], t, n_steps, full_latent)
-    #             for j in range(1, n_steps + 1):
-    #                 z_curr = z_index[j - 1]
-    #                 z_next = z_index[j]
-    #                 x = index_to_pos[z_curr]
-    #                 d_pos = index_to_pos[z_next] - x
-    #                 plt.quiver(x[0], x[1], d_pos[0], d_pos[1], scale_units="xy", angles="xy", scale=1, alpha=0.8)
-
-    # def index_to_mask(self):
-    #     loader, _ = dat.full_index_normalized_data()
-    #     id_mask = {}
-    #     for _, l, id in loader:
-    #         label = l.detach().numpy()
-    #         index = id.detach().numpy()
-    #         for j in range(len(index)):
-    #             id_mask[index[j]] = label[j]
-    #     return id_mask
-
     def plot_recons_dis_trade_of(self):
         _, axs = plt.subplots(3, 1, figsize=(10, 10))
         betas = [1, 2, 3, 4, 8]
@@ -551,15 +490,16 @@ class Plot:
             plt.savefig(self.output_dir / f"plots/spatial/mz_{i}", bbox_inches="tight")
 
     def plot_polygons_get_mask(self, ax, pol_limits, colors, index_to_pos, image_shape):
-        # n_poly = 5
         masks = np.zeros(image_shape)
         for i, pol_limit in enumerate(pol_limits):
+            
             ## Polygones on top images
             poly1 = Polygon(pol_limit, alpha=0.5, ec="gray", fc=colors[i], visible=True)
             p = m_path.Path(pol_limit)
             ax.add_patch(poly1)
             flag = p.contains_points(self.full_latent[:, 1:])
             index_mask = self.full_latent[:, 0][flag]
+            
             ###### Selection for traversal
             # min_d = np.argmin(self.full_latent[flag,2])
             # max_d = np.argmax(self.full_latent[flag,2])
