@@ -78,7 +78,7 @@ def index_to_image_pos(data_dir: Path) -> dict:
     for i in range(image_shape[0]):
         for j in range(image_shape[1]):
             if ~np.isnan(reshape_pixel[i, j]):
-                index_to_pos[reshape_pixel[i, j]] = np.array([i, j])
+                index_to_pos[int(reshape_pixel[i, j])] = np.array([i, j])
     return index_to_pos
 
 

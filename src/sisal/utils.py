@@ -1,10 +1,12 @@
 from collections import Counter
+import warnings
 
 import numpy as np
 import pandas as pd
 import torch
 from sklearn.preprocessing import StandardScaler
 from torch.autograd import Variable
+from tqdm import tqdm
 
 
 def reparametrize(mu, logvar):
@@ -23,19 +25,20 @@ def sample_batch(m, var):
 
 ## Compute the full latent space of the data given in loader
 ## Return the associate latent mean, variance and label
-def compute_latent(loader, model):
+def compute_latent(loader, model, silent: bool = False):
     n = len(loader.dataset)
     latent = np.zeros((n, 1 + model.z_dim))
     vars = np.zeros((n, model.z_dim))
     label = np.zeros(n)
     alpha = np.zeros(n)
-    with torch.no_grad():
+    with warnings.catch_warnings(), torch.no_grad():
+        warnings.simplefilter("ignore", UserWarning)
         prev = 0
-        for x, l, *rest, i in loader:
+        for x, l, *rest, i in tqdm(loader, desc="Computing latent", unit="batch", disable=silent):
             if len(rest) == 1:  # Means alpha is included
                 alpha_val = rest[0]
             else:
-                alpha_val = None  # Default value if alpha is missing
+                alpha_val = np.nan  # Default value if alpha is missing
             z_mean, z_logvar = model.forward(x)
             batch = z_mean.size(0)
             latent[prev : prev + batch, 0] = i
@@ -45,10 +48,12 @@ def compute_latent(loader, model):
             alpha[prev : prev + batch] = alpha_val
             prev += batch
 
+    # remove rows where the latent is all zeros
     n_zeros_rows = ~np.all(latent == 0, axis=1)
     latent = latent[n_zeros_rows]
     vars = vars[n_zeros_rows]
     label = label[n_zeros_rows]
+    alpha = alpha[n_zeros_rows]
 
     return latent, vars, label, alpha
 
@@ -380,7 +385,7 @@ def normalize_train_test_full_loader_given_index(
             shuffle=False,
             batch_size=batch_size,
             pin_memory=True,
-            drop_last=True,
+            drop_last=False,
         )
     else:
         full_loader = loader = torch.utils.data.DataLoader(
@@ -388,7 +393,7 @@ def normalize_train_test_full_loader_given_index(
             shuffle=False,
             batch_size=batch_size,
             pin_memory=True,
-            drop_last=True,
+            drop_last=False,
         )
 
     return loaders[0], loaders[1], full_loader

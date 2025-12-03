@@ -33,12 +33,7 @@ class Plot:
         device = torch.device(device)
         model = torch.load(path, map_location=torch.device("cpu"), weights_only=False)
         self.model = model
-        full_latent, vars, label, alpha = compute_latent(self.loader, model)
-
-        self.full_latent = full_latent
-        self.vars = vars
-        self.label = label
-        self.alpha = alpha
+        self.full_latent, self.vars, self.label, self.alpha = compute_latent(self.loader, model)
 
         # set output directory
         if output_dir is None:
@@ -505,7 +500,7 @@ class Plot:
             # max_d = np.argmax(self.full_latent[flag,2])
             pos = np.zeros((len(index_mask), 2))
             for j, ind in enumerate(index_mask):
-                pos[j, :] = index_to_pos[ind]
+                pos[j, :] = index_to_pos[int(ind)]
 
             ## Plot scatter image bottom right
             for j, ind in enumerate(index_mask):

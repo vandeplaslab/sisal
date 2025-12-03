@@ -1,5 +1,6 @@
 import logging
 from pathlib import Path
+import warnings
 
 import numpy as np
 import torch
@@ -34,14 +35,14 @@ class Solver:
         self.beta = beta
         self.save_loss = save_loss
 
-    ## Average KL over the batch
-    def KL(self, mu, logvar):
+    def KL(self, mu: torch.Tensor, logvar: torch.Tensor) -> torch.Tensor:
+        """Average KL divergence over the batch."""
         logvar = logvar.view(logvar.size(0), logvar.size(1))
         klds = 0.5 * (mu.pow(2) + logvar.exp() - logvar - 1)
         return klds.sum(1).mean(0)
 
-    ##Average recons over the batch
     def reconstruction_loss(self, x: torch.Tensor, mu_x: torch.Tensor) -> torch.Tensor:
+        """Average reconstruction loss over the batch."""
         # - \E_{z \sim q_\phi(z|x)}(\log p_\theta(x|z))
         # Model to start
         # Param : q_\phi = N(0,diag(\sigma^2)), p_\theta(z) = N(0,I) , p_\theta(x|z) = N(\mu, I)
@@ -53,6 +54,7 @@ class Solver:
     def loss(
         self, beta: float, x: torch.Tensor, z_mean: torch.Tensor, z_logvar: torch.Tensor, decoder_mean: torch.Tensor
     ) -> torch.Tensor:
+        """Compute the beta-VAE loss function."""
         return self.reconstruction_loss(x, decoder_mean) + beta * self.KL(z_mean, z_logvar)
 
     def train_one_epoch(self, epoch_index: int, dataloader):
@@ -104,6 +106,7 @@ class Solver:
         return last_loss, last_recons, last_kl
 
     def evaluate_loss(self, loader):
+        """Evaluate loss on a given dataset."""
         with torch.no_grad():
             running_loss = 0.0
             running_recons = 0
@@ -120,8 +123,8 @@ class Solver:
                 if i % 1000 == 999:
                     return running_loss / 1000, running_recons / 1000, running_KL / 1000
 
-    # TODO: change from args to actual arguments
     def train(self, train_loader, validation_loader, path: Path, v=0):
+        """Train the model."""
         path = Path(path)
 
         best_vloss = 1e6
@@ -139,47 +142,48 @@ class Solver:
             if self.save_epochs:
                 torch.save(self.model, path.parent / "model/model_weight_n_-1.pth")
 
-            # Training loop
-            for epoch in trange(self.epochs, desc="Training model", unit="epoch"):
-                if early_stop >= epoch_early_stop:
-                    logger.info(f"Early Stop, no improvements for {epoch_early_stop} epochs")
+            with warnings.catch_warnings():
+                warnings.filterwarnings("ignore", UserWarning)  # filters some pytorch warnings
+                # Training loop
+                for epoch in trange(self.epochs, desc="Training model", unit="epoch"):
+                    if early_stop >= epoch_early_stop:
+                        logger.info(f"Early Stop, no improvements for {epoch_early_stop} epochs")
+                        if self.save_loss:
+                            with open(
+                                path.parent / f"saved_data/avg_models/model_z{self.z_dim}_b{self.beta}_v{v}.npy", "wb"
+                            ) as f:
+                                np.save(f, results)
+                        return path
+
+                    self.model.train(True)
+                    avg_loss, avg_recons, avg_KL = self.train_one_epoch(epoch, train_loader)
+                    if self.save_epochs:
+                        torch.save(self.model, path.parent / f"model/model_weight_n_{epoch * 3 + 2}.pth")
+
+                    # Evaluation on the validation set
+                    self.model.train(False)
+                    running_vloss = 0.0
+                    with torch.no_grad():
+                        for x, _ in validation_loader:
+                            x = x.to(self.device, non_blocking=True)
+                            z_mean, z_logvar = self.model.forward(x)
+                            z = reparametrize(z_mean, z_logvar)
+                            decoder_mean = self.model.decoder(z)
+                            beta_vae_loss = self.loss(self.beta, x, z_mean, z_logvar, decoder_mean)
+                            running_vloss += beta_vae_loss.item()
+
+                    avg_vloss = running_vloss / len(validation_loader)
+
                     if self.save_loss:
-                        with open(
-                            path.parent / f"saved_data/avg_models/model_z{self.z_dim}_b{self.beta}_v{v}.npy", "wb"
-                        ) as f:
-                            np.save(f, results)
-                    return path
+                        disentangling_metric = self.disentangling_metric_estimate(train_loader)
+                        results.append([epoch, avg_loss, avg_recons.item(), avg_KL.item(), avg_vloss, disentangling_metric])
 
-                self.model.train(True)
-                avg_loss, avg_recons, avg_KL = self.train_one_epoch(epoch, train_loader)
-                if self.save_epochs:
-                    torch.save(self.model, path.parent / f"model/model_weight_n_{epoch * 3 + 2}.pth")
-
-                # Evaluation on the validation set
-                self.model.train(False)
-                running_vloss = 0.0
-                with torch.no_grad():
-                    for x, _ in validation_loader:
-                        x = x.to(self.device, non_blocking=True)
-                        z_mean, z_logvar = self.model.forward(x)
-                        z = reparametrize(z_mean, z_logvar)
-                        decoder_mean = self.model.decoder(z)
-                        beta_vae_loss = self.loss(self.beta, x, z_mean, z_logvar, decoder_mean)
-                        running_vloss += beta_vae_loss.item()
-
-                avg_vloss = running_vloss / len(validation_loader)
-
-                if self.save_loss:
-                    disentangling_metric = self.disentangling_metric_estimate(train_loader)
-                    results.append([epoch, avg_loss, avg_recons.item(), avg_KL.item(), avg_vloss, disentangling_metric])
-
-                if avg_vloss < best_vloss:
-                    early_stop = 0
-                    best_vloss = avg_vloss
-                    torch.save(self.model, path)
-
-                else:
-                    early_stop += 1
+                    if avg_vloss < best_vloss:
+                        early_stop = 0
+                        best_vloss = avg_vloss
+                        torch.save(self.model, path)
+                    else:
+                        early_stop += 1
 
         if self.save_loss:
             with open(path.parent / f"saved_data/avg_models/model_z{self.z_dim}_b{self.beta}_v{v}.npy", "wb") as f:
@@ -187,12 +191,14 @@ class Solver:
         return path
 
     def evaluate_initialization(self, train_loader, test_loader):
+        """Evaluate the model before training."""
         with torch.no_grad():
             train_loss, train_recons, train_kl = self.evaluate_loss(train_loader)
             test_loss, _, _ = self.evaluate_loss(test_loader)
         return train_loss, train_recons, train_kl, test_loss
 
     def disentangling_metric_estimate(self, train_loader):
+        """Disentangling metric estimate."""
         n_b = 1
         emp_std = compute_estimate_std(self.model, n_b, train_loader, self.device)
         z_dim = self.model.z_dim
@@ -202,8 +208,8 @@ class Solver:
         return disentangling_metric
 
 
-# TODO: change from args to actual arguments
-def train_batch_models(args, train_loader, test_loader, train: bool = True, z_dim: int = 10, silent: bool = False):
+def train_batch_models(args, train_loader, test_loader, train: bool = True, z_dim: int = 10, silent: bool = False) -> None:
+    """Train multiple models for averaging later."""
     args.train = train
     args.z_dim = z_dim
     n_rep = 4  # Number of times each model is computed
@@ -214,8 +220,8 @@ def train_batch_models(args, train_loader, test_loader, train: bool = True, z_di
         net.train(train_loader, test_loader, path, v=r)
 
 
-# TODO: change from args to actual arguments
-def train_batch_beta(args, in_size, train_loader, test_loader, train: bool = True, z_dim: int = 10):
+def train_batch_beta(args, in_size, train_loader, test_loader, train: bool = True, z_dim: int = 10) -> None:
+    """Train multiple models for averaging later."""
     args.train = train
     args.z_dim = z_dim
     # TODO: add 'output_dir' as input argument and then use it with path
