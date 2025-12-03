@@ -182,7 +182,7 @@ def plot_spatial_separate(mask, image_circle, image_triangle, image_square):
 
 
 def plot_synthetic():
-    image_circle, image_triangle, image_square, mask, overlapp = create_image_new(
+    image_circle, image_triangle, image_square, mask, _overlapp = create_image_new(
         eps_scale=eps_scale, coeff_scale=coeff_scale, coeff_loc=coeff_loc
     )
     image_circle + image_triangle + image_square
@@ -193,6 +193,7 @@ def plot_synthetic():
 
     spectrums, spectrum_names = create_spectrum(in_size)
     plot_spectral_separate(spectrums, spectrum_names)
+
 
 def plot_spatial_separate2d(eps_scale=eps_scale, coeff_scale=coeff_scale, coeff_loc=coeff_loc):
     _, ax = plt.subplots(nrows=2, figsize=(10, 10))
@@ -211,7 +212,7 @@ def plot_spatial_separate2d(eps_scale=eps_scale, coeff_scale=coeff_scale, coeff_
 
 def plot_mask(eps_scale=eps_scale, coeff_scale=coeff_scale, coeff_loc=coeff_loc):
     plt.figure(figsize=(10, 10))
-    image_circle, image_triangle, image_square, mask = create_image(eps_scale, coeff_scale, coeff_loc)
+    _image_circle, _image_triangle, _image_square, mask = create_image(eps_scale, coeff_scale, coeff_loc)
     plt.imshow(mask, cmap=cmap_spa)
     plt.title(rf"Param $\epsilon \sim N(0,{eps_scale}^2), c,t,s \sim N({coeff_loc},{coeff_scale}^2)$")
     plt.savefig("plots/synthetic_data/mask.png", bbox_inches="tight")
@@ -273,7 +274,7 @@ def plot_spectral_separate(s_col, spectrum_names):
         z_size = len(s)
         x_pos = np.arange(z_size)
 
-        _, stemlines1, _ = axs[i].stem(x_pos, s, col_dict[index_col[i]], markerfmt=" ")
+        _, _stemlines1, _ = axs[i].stem(x_pos, s, col_dict[index_col[i]], markerfmt=" ")
 
 
 def mask_to_name_synthetic():
@@ -299,7 +300,7 @@ def get_mask(is_in_array):
 def plot_all():
     z_size = 212
 
-    image_circle, image_triangle, image_square, mask = create_image(
+    image_circle, image_triangle, image_square, _mask = create_image(
         eps_scale=eps_scale, coeff_scale=coeff_scale, coeff_loc=coeff_loc
     )
     image_circle + image_triangle + image_square
@@ -357,13 +358,13 @@ def return_synthetic_data():
         + np.outer(image_triangle.flatten(), s[1])
         + np.outer(image_square.flatten(), s[2])
     )
-    
+
     # Add noise
     r = np.random.RandomState(8970)
     centroids = data + r.normal(scale=eps_scale, size=data.shape)
 
     # The alpha value (SNR) of the spectrum
     # COMPUTE the SNR named alpha which is the norm of the spectrum signal
-    SNR = np.linalg.norm(data, axis=1)**2 / (eps_scale**2 * data.shape[1])
+    SNR = np.linalg.norm(data, axis=1) ** 2 / (eps_scale**2 * data.shape[1])
 
     return centroids, SNR, mask.flatten(), mask_to_name_synthetic()

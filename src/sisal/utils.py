@@ -12,6 +12,7 @@ def reparametrize(mu, logvar):
     eps = Variable(std.data.new(std.size()).normal_())
     return mu + std * eps
 
+
 def sample(m, var):
     return m + np.sqrt(var) * np.random.normal(size=m.shape[0])
 

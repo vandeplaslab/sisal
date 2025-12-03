@@ -87,7 +87,7 @@ class Solver:
 
             if i % 1000 == 999:
                 # Avergae loss per batch
-                last_loss = running_loss / 1000 
+                last_loss = running_loss / 1000
                 logger.info(f"  batch {i + 1} loss: {last_loss}")
                 running_loss = 0.0
 

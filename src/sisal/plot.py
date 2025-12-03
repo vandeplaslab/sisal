@@ -21,6 +21,7 @@ from sisal.utils import compute_latent, compute_loss, reparametrize
 
 mpl.rcParams.update(mpl.rcParamsDefault)
 
+
 class Plot:
     def __init__(
         self, path: Path, device: str, train_loader, test_loader, full_loader, output_dir: Path | None = None
@@ -291,7 +292,7 @@ class Plot:
         ## Plot of the variance in order :
         col_data = col_data.sort_values(by="variance", ascending=False)
 
-        f, ax = plt.subplots(figsize=(15, 5))
+        _f, ax = plt.subplots(figsize=(15, 5))
 
         subset = np.arange(0, 212, step=4)
         ax.set_xticks(subset)
@@ -453,7 +454,7 @@ class Plot:
         n = 4  # Number of versions
 
         for b in betas:
-            train_loss, train_recons, train_kl, test_loss, dis_metric = compute_loss(b, n)
+            train_loss, train_recons, _train_kl, _test_loss, dis_metric = compute_loss(b, n)
 
             x_range = range(train_loss.shape[1])
             for i in range(n):
@@ -476,30 +477,29 @@ class Plot:
                 axs[j].legend().get_frame().set_linewidth(0.0)
                 axs[j].legend(title=r"$\beta$", bbox_to_anchor=(1, 1), loc="upper left")
 
-    def plot_spatial(self, indices):
-        ############# For kidney data
-        ## Draw image mask on one mzs in the bottom
-        centroids, _, pixel_index = dat.load()  # original data
-        image_shape, norm, mzs = dat.load_shape_norm_mzs()
-        # index_to_pos = self.index_to_image_pos(image_shape, pixel_index)
+    # def plot_spatial(self, indices):
+    #     ############# For kidney data
+    #     ## Draw image mask on one mzs in the bottom
+    #     centroids, _, pixel_index = dat.load()  # original data
+    #     image_shape, norm, mzs = dat.load_shape_norm_mzs()
+    #     # index_to_pos = self.index_to_image_pos(image_shape, pixel_index)
 
-        for i in indices:
-            plt.figure(figsize=(10, 10))
-            plt.imshow(dat.reshape_array(centroids[:, i] / norm, image_shape, pixel_index))
-            plt.title(f"m/z {mzs[i]:.4f}", fontsize=20)
-            plt.savefig(self.output_dir / f"plots/spatial/mz_{i}", bbox_inches="tight")
+    #     for i in indices:
+    #         plt.figure(figsize=(10, 10))
+    #         plt.imshow(dat.reshape_array(centroids[:, i] / norm, image_shape, pixel_index))
+    #         plt.title(f"m/z {mzs[i]:.4f}", fontsize=20)
+    #         plt.savefig(self.output_dir / f"plots/spatial/mz_{i}", bbox_inches="tight")
 
     def plot_polygons_get_mask(self, ax, pol_limits, colors, index_to_pos, image_shape):
         masks = np.zeros(image_shape)
         for i, pol_limit in enumerate(pol_limits):
-            
             ## Polygones on top images
             poly1 = Polygon(pol_limit, alpha=0.5, ec="gray", fc=colors[i], visible=True)
             p = m_path.Path(pol_limit)
             ax.add_patch(poly1)
             flag = p.contains_points(self.full_latent[:, 1:])
             index_mask = self.full_latent[:, 0][flag]
-            
+
             ###### Selection for traversal
             # min_d = np.argmin(self.full_latent[flag,2])
             # max_d = np.argmax(self.full_latent[flag,2])
