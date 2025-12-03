@@ -1,6 +1,6 @@
 import logging
-from pathlib import Path
 import warnings
+from pathlib import Path
 
 import numpy as np
 import torch
@@ -176,7 +176,9 @@ class Solver:
 
                     if self.save_loss:
                         disentangling_metric = self.disentangling_metric_estimate(train_loader)
-                        results.append([epoch, avg_loss, avg_recons.item(), avg_KL.item(), avg_vloss, disentangling_metric])
+                        results.append(
+                            [epoch, avg_loss, avg_recons.item(), avg_KL.item(), avg_vloss, disentangling_metric]
+                        )
 
                     if avg_vloss < best_vloss:
                         early_stop = 0
@@ -208,7 +210,9 @@ class Solver:
         return disentangling_metric
 
 
-def train_batch_models(args, train_loader, test_loader, train: bool = True, z_dim: int = 10, silent: bool = False) -> None:
+def train_batch_models(
+    args, train_loader, test_loader, train: bool = True, z_dim: int = 10, silent: bool = False
+) -> None:
     """Train multiple models for averaging later."""
     args.train = train
     args.z_dim = z_dim

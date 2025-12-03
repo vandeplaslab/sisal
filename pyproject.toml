@@ -32,6 +32,7 @@ classifiers = [
 dynamic = ["version"]
 dependencies = [
     "numpy",
+    "numba",
     "matplotlib",
     "torch",
     "imageio",
