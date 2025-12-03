@@ -143,7 +143,7 @@ class Solver:
                 torch.save(self.model, path.parent / "model/model_weight_n_-1.pth")
 
             with warnings.catch_warnings():
-                warnings.filterwarnings("ignore", UserWarning)  # filters some pytorch warnings
+                warnings.simplefilter("ignore", UserWarning)  # filters some pytorch warnings
                 # Training loop
                 for epoch in trange(self.epochs, desc="Training model", unit="epoch"):
                     if early_stop >= epoch_early_stop:
