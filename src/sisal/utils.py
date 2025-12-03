@@ -12,17 +12,12 @@ def reparametrize(mu, logvar):
     eps = Variable(std.data.new(std.size()).normal_())
     return mu + std * eps
 
-
 def sample(m, var):
     return m + np.sqrt(var) * np.random.normal(size=m.shape[0])
 
 
 def sample_batch(m, var):
     return m + np.sqrt(var) * np.random.normal(size=m.shape)
-
-
-# def sample(m, var):
-#     return m + np.sqrt(var)*np.random.normal(size=m.shape[0])
 
 
 ## Compute the full latent space of the data given in loader
@@ -43,35 +38,16 @@ def compute_latent(loader, model):
             z_mean, z_logvar = model.forward(x)
             batch = z_mean.size(0)
             latent[prev : prev + batch, 0] = i
-            # print('# i = ', i)
             latent[prev : prev + batch, 1:] = z_mean.detach().numpy()
             vars[prev : prev + batch, :] = np.exp(z_logvar.detach().numpy())
             label[prev : prev + batch] = l
             alpha[prev : prev + batch] = alpha_val
             prev += batch
 
-        # for x,l , i in loader :
-        # #for i, (x,l)  in enumerate(loader) :
-        #     #x =x.to(device)
-        #     z_mean,  z_logvar =model.forward(x)
-        #     batch = z_mean.size(0)
-        #     latent[prev:prev+batch,0] = i
-        #     #print('# i = ', i)
-        #     latent[prev:prev+batch,1:] = z_mean.detach().numpy()
-        #     vars[prev:prev+batch,:] = np.exp(z_logvar.detach().numpy())
-        #     label[prev:prev+batch] = l
-        #     prev+=batch
-
     n_zeros_rows = ~np.all(latent == 0, axis=1)
     latent = latent[n_zeros_rows]
     vars = vars[n_zeros_rows]
     label = label[n_zeros_rows]
-
-    # with open('saved_data/saved_latent.npy', 'wb') as f:
-    #     np.save(f, latent)
-    #     np.save(f, vars)
-    #     np.save(f,label)
-    # print('End Compute latent')
 
     return latent, vars, label, alpha
 
@@ -94,11 +70,6 @@ def compute_latent_synthetic(loader, model):
             coeff[prev : prev + batch] = alpha
             prev += batch
 
-    # with open('saved_data/saved_latent.npy', 'wb') as f:
-    #     np.save(f, latent)
-    #     np.save(f, vars)
-    #     np.save(f,label)
-
     n_zeros_rows = ~np.all(latent == 0, axis=1)
     latent = latent[n_zeros_rows]
     vars = vars[n_zeros_rows]
@@ -112,12 +83,9 @@ def compute_latent_mean(loader, model):
     latent = np.zeros((len(loader.dataset), model.z_dim))
     with torch.no_grad():
         prev = 0
-        # for x,l , i in loader :
         for x, _ in loader:
-            # x =x.to(device)
             z_mean, _ = model.forward(x)
             batch = z_mean.size(0)
-            # latent[prev:prev+batch,0] = i
             latent[prev : prev + batch, :] = z_mean.detach().numpy()
             prev += batch
     return latent
@@ -129,11 +97,9 @@ def compute_estimate_std(model, n_b, loader, device):
     np.zeros((n_b * batch_size, model.z_dim))
     with torch.no_grad():
         prev = 0
-        # for x,l , i in loader :
         for _ in range(n_b):
             x, _ = next(iter(loader))
             x = x.to(device, non_blocking=True)
-            # x =x.to(device)
             z_mean, _ = model.forward(x)
             batch = z_mean.size(0)
             emp_std = torch.std(z_mean, axis=0, unbiased=True)
@@ -144,7 +110,6 @@ def compute_estimate_std(model, n_b, loader, device):
 # Compute the empirical standard distribution of the full data
 def emp_std(full_latent):
     return np.std(full_latent, axis=0, ddof=1)
-    # return np.sqrt(np.var(full_latent,axis = 0,ddof=1))
 
 
 # Compute the limit of the latent space using the full precomputed latent_space
@@ -159,16 +124,11 @@ def accuracy_confusion_matrix(confusion_matrix):
 
 
 def metric_disentangling(model, z_min, z_max, full_std, std_threshold):
-    # std_threshold = 0.2
     L = 100
-    # L=32
     M = 800
-    # print('full_std =', full_std)
-    # print('len(full_std) = ', len(full_std))
     z_dim = len(full_std)
 
     z_dims = np.arange(z_dim)
-    # active_dims = (full_std>=std_threshold).cpu()
     active_dims = full_std >= std_threshold
     if not (all(active_dims)):
         pass
@@ -176,7 +136,6 @@ def metric_disentangling(model, z_min, z_max, full_std, std_threshold):
     factors = np.random.choice(z_dims[active_dims], M)  # Factors that are kept fixed
     metric_data = np.zeros((M, 2))
 
-    # factors = np.random.choice(z_dim, M) #Factors that are kept fixed
     with torch.no_grad():
         for i in range(M):
             f = factors[i]
@@ -186,12 +145,7 @@ def metric_disentangling(model, z_min, z_max, full_std, std_threshold):
             not_f = ~np.isin(np.arange(z_dim), [f])
             random_factors[:, not_f] = np.random.uniform(low=z_min[not_f], high=z_max[not_f], size=(L, z_dim - 1))
             random_factors = np.float32(random_factors)
-            ############
             random_factors = torch.tensor(random_factors).to("cuda", non_blocking=True)
-            ############
-            # print('## Random_factors = ', random_factors)
-            # print(random_factors.shape)
-
             random_data = model.decoder(random_factors)
 
             latent = model.encoder(random_data).cpu().detach().numpy()
@@ -200,15 +154,8 @@ def metric_disentangling(model, z_min, z_max, full_std, std_threshold):
 
             random_latent = sample_batch(mu, np.exp(logvar))
 
-            # random_latent = random_latent/full_std
             random_latent = random_latent / full_std.detach().numpy()
 
-            # if i == 0 :
-            #     print('##Factor = ' , f)
-            #     print('##Random Latent ')
-            #     print(random_latent[:5,:])
-            # print('## Random latent = ', random_latent.shape)
-            # print('#### full_std = ', full_std.shape)
             random_latent = random_latent
             emp_var = np.var(random_latent, axis=0, ddof=1)  ## Unbiased estimate of the variance
 
@@ -231,11 +178,6 @@ def metric_disentangling(model, z_min, z_max, full_std, std_threshold):
 
     accuracy = accuracy_confusion_matrix(confusion_matrix)
 
-    # accuracy = accuracy_confusion_matrix(confusion_matrix)
-    # print('### Confusion Matrix')
-    # print(confusion_matrix)
-    # print('### Accuracy')
-    # print(accuracy)
     return accuracy, confusion_matrix
 
 
@@ -254,18 +196,13 @@ def metric_disentangling_factorising(model, full_latent, vars, z_min, z_max):
     full_std = emp_std(full_latent[:, 1:])
 
     np.random.choice(full_latent.shape[0], M, replace=False)
-    # factors = np.random.binomial(1, 0.5, M)
     factors = np.random.choice(z_dim, M)  # Factors that are kept fixed
 
     metric_data = np.zeros((M, 2))  # In first pos is that majority variance and in 1 is the label factor
-    # for p,i in enumerate(index):
     for p in range(M):
         f = factors[p]
-        # z = sample(full_latent[i,1:],vars[i])
-        # z=full_latent[i,1:]
 
         random_factors = np.zeros((L, z_dim))
-        # random_fac tors[:,f] = z[f] + np.random.normal(scale = 10)
         fixed_value = np.random.uniform(low=z_min[f], high=z_max[f])
         random_factors[:, f] = fixed_value
         not_f = ~np.isin(np.arange(z_dim), [f])
@@ -274,7 +211,6 @@ def metric_disentangling_factorising(model, full_latent, vars, z_min, z_max):
         random_data = model.decoder(torch.Tensor(random_factors))
         random_latent = model.encoder(random_data).detach().numpy()[:, :z_dim]
 
-        # random_latent = random_latent.detach().numpy()[:,:z_dim]
         random_latent = random_latent / full_std
 
         emp_var = np.var(random_latent, axis=0, ddof=1)
@@ -299,7 +235,6 @@ def metric_disentangling_factorising(model, full_latent, vars, z_min, z_max):
 
     classifier = np.argmax(confusion_matrix, axis=1)
     np.sum(confusion_matrix[np.arange(confusion_matrix.shape[0]), classifier]) * 1.0 / np.sum(confusion_matrix)
-    # accuracy = accuracy_confusion_matrix(confusion_matrix)
 
     return confusion_matrix
 
@@ -309,7 +244,6 @@ def metric_disentangling_factorising(model, full_latent, vars, z_min, z_max):
 # b = value of beta
 # z_dim dim of latent space
 def load_results(b, n, z_dim):
-    # z_dim = 10
     results = []
     for v in range(n):
         with open(f"saved_data/avg_models/model_z{z_dim}_b{b}_v{v}.npy", "rb") as f:
