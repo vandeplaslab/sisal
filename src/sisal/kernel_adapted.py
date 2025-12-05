@@ -26,7 +26,9 @@ def kernel_adapated(full_latent: np.ndarray, vars: np.ndarray) -> np.ndarray:
     im_size = len(X[0])
 
     n = len(full_latent)
-    h = 4 * n ** (-1 / 6)
+    # Kernel K_H(x) = H^{-1/2}K(H^{-1/2}x) 
+    # Scott’s rule of thumb suggests picking a diagonal matrix H such that H_{i,i} = n^{−2/(d+4)}\sigma^2
+    h = 4 * n ** (-1 / 6) 
 
     image = np.zeros(len(grid[0]))
 
