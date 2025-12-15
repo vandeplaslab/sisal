@@ -60,6 +60,8 @@ def load_image_info(data_dir: Path):
 def load_normalization_data(data_dir: Path, norm="0-95% TIC"):
     """Load normalization data."""
     filename = data_dir / "normalizations-raw.h5"
+    if not filename.exists():
+        filename = data_dir / "normalizations.h5"
     assert filename.exists(), f"File {filename} does not exist"
     with h5py.File(filename, mode="r") as f_ptr:
         normalization = f_ptr[f"Normalization/{norm}/normalization"][:]
@@ -82,9 +84,11 @@ def index_to_image_pos(data_dir: Path) -> dict:
     return index_to_pos
 
 
-def load_centroids(data_dir: Path, name: str = "peaks_ppm=3.0_final_mzs_v1.h5"):
+def load_centroids(data_dir: Path, name: str = "peaks_ppm=3.0_final_mzs_v1.h5", alt_name: str = "centroids.h5") -> tuple[np.ndarray, np.ndarray]:
     """Load centroids data."""
     filename = data_dir / name
+    if not filename.exists():
+        filename = data_dir / alt_name
     assert filename.exists(), f"File {filename} does not exist"
     with h5py.File(filename, mode="r") as f_ptr:
         ds = f_ptr["Array/array"]
