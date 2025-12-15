@@ -66,6 +66,10 @@ class Solver:
 
         running_recons = 0
         running_KL = 0
+        
+        last_recons = 0.0
+        last_kl = 0.0
+
         for i, (x, _) in enumerate(dataloader):
             x = x.to(self.device, non_blocking=True)
             z_mean, z_logvar = self.model.forward(x)

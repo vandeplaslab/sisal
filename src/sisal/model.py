@@ -22,9 +22,10 @@ class BetaVAE(nn.Module):
     def __init__(self, z_dim: int, in_size: int):
         super().__init__()
         if in_size < 19:
-            raise ValueError("Input size too small for BetaVAE, should be at least 19")
+            raise ValueError(f"Input size too small for BetaVAE, should be at least 19 (value={in_size})")
+        if z_dim <= 0:
+            raise ValueError(f"Latent dimension must be positive (value={z_dim})")
 
-        self.latent_std_min = 10  # so that the min variance is >=  e^{-10}
         self.z_dim = z_dim
 
         k1 = 10 if in_size % 2 == 0 else 9
@@ -89,8 +90,9 @@ class BetaVAE(nn.Module):
 
 
 class BetaVAESynthetic(BetaVAE):
-    def __init__(self, z_dim: int, in_size: int = 5):
+    def __init__(self, z_dim: int, in_size: int = 20):
         super().__init__(z_dim, in_size)
+        
         # Param : q_\phi = N(0,diag(\sigma^2)) model covariance as diagonal
         self.encoder = nn.Sequential(
             nn.Conv1d(1, 10, 3, stride=1, padding=1),  # 10 * 5
