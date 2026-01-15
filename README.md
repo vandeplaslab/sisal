@@ -10,9 +10,9 @@ The SiSAL package is an approach based on the beta-variational autoencoder and k
 to dissect data along independent, uncertainty-aware, and interpretable (yet non-linear) latent axes. 
 It includes a novel comparative-latent-traversal algorithm to
 translate latent findings back into the original measurement context. 
-You can find demonstration in the /experiments folder. 
+You can find demonstrations in the /experiments folder. 
 It includes an imaging mass spectrometry-based molecular imaging of human kidney and a synthetic dataset. 
-The approach’s disentangling properties are shown to impress a latent space structure
+The approach’s disentangling properties are shown to impose a latent space structure
 that separates signal strength from relative signal content, offering exceptional
 chemical insight. 
 
@@ -32,6 +32,18 @@ git clone https://github.com/vandeplaslab/sisal.git
 pip install "."
 ```
 
+## Examples
+
+If you are planning on running the examples, you can install the optional dependencies with:
+
+```bash
+pip install sisal[demo]
+```
+
+This will include additional packages such as `jupyterlab` and `pooch` to download data from Zenodo.
+
+You can find the example data on [Zenodo](https://zenodo.org/records/17910325).
+
 ## Contributing
 
 Contributions are always welcome. Please feel free to submit PRs with new features, bug fixes, or documentation improvements.
@@ -43,7 +55,7 @@ pip install -e .[dev]
 ```
 
 
-## Examples
+## Figures
 
 ### Kidney imaging mass spectrometry datasets
 <table>
@@ -62,4 +74,3 @@ pip install -e .[dev]
     </td>
   </tr>
 </table>
-
