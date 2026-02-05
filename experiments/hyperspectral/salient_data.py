@@ -4,6 +4,7 @@ import h5py
 import pandas as pd
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1.inset_locator import mark_inset
+import PIL
 
 DATA_DIR = Path(r"../../data/")
 
@@ -26,6 +27,15 @@ def spectral_range():
     """
     nm_values = np.array([f"{380 + 5 * i}" for i in range(81)])
     return nm_values
+
+def return_rgb_image(im_num: str = "0012"):
+    """
+    Return an RBG image example of the Salient dataset
+    """
+    dir = DATA_DIR / "salient/HS-SOD/color"
+    name = im_num + ".jpg"
+    im = PIL.Image.open(dir / name)
+    return im
 
 def reshape_array(y_data, image_shape, pixel_index, fill_value=np.nan):
     """
