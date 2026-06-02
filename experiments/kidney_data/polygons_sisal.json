@@ -1,0 +1,55 @@
+{
+  "title": "Polygon coordinates for the kidney HuBMAP datasets used in the paper 'Signal Strength Aware Latent Spaces Reveal Molecularly Distinct Substructures within Human Kidney Tissue' ",
+  "description": "Each dataset corresponds to one HuBMAP kidney case study. Polygons (pol_limit1..pol_limit5) are stored as ordered lists of [x, y] vertices. Polygons are open (the first vertex is not repeated at the end); the closing edge is implied.",
+  "coordinate_format": "[x, y]",
+  "datasets": [
+    {
+      "case_study": 1,
+      "name": "VAN0046-LK-3-45",
+      "doi_url": "https://portal.hubmapconsortium.org/browse/dataset/81cd3c15242fc3612992463c58824ec8",
+      "polygons": [
+        { "id": "pol_limit1", "color": "orange", "coordinates": [[0.5, -3.4], [0.7, -3.2], [0.7, 2.2], [0.2, 2.2]] },
+        { "id": "pol_limit2", "color": "black",  "coordinates": [[-1.9, -2.1], [-1.3, -3.0], [-0.4, 1.2], [-1.1, 1.4]] },
+        { "id": "pol_limit3", "color": "red",    "coordinates": [[-0.3, -3.4], [0.2, -3.2], [0.2, 1.0], [-0.3, 1.0]] },
+        { "id": "pol_limit4", "color": "yellow", "coordinates": [[0.9, -3.0], [1.5, -2.9], [1.1, 1.2], [0.8, 1.2]] },
+        { "id": "pol_limit5", "color": "green",  "coordinates": [[2.6, -3.0], [3.9, -2.8], [3.0, 1.2], [1.4, 0.9], [1.3, -0.1]] }
+      ]
+    },
+    {
+      "case_study": 3,
+      "name": "VAN0063-RK-1-41",
+      "doi_url": "https://portal.hubmapconsortium.org/browse/dataset/a15a919f193fcd6bd35b611ba8d3b01a",
+      "polygons": [
+        { "id": "pol_limit1", "color": "orange", "coordinates": [[-0.4, -2.3], [0.1, -2.3], [-0.1, 1.7], [-0.5, 1.5]] },
+        { "id": "pol_limit2", "color": "black",  "coordinates": [[0.3, -3.0], [1.1, -3.0], [0.6, 1.0], [0.4, 1.3], [0.1, 0.3], [0.1, -1.0]] },
+        { "id": "pol_limit3", "color": "red",    "coordinates": [[1.7, -3.0], [2.8, -2.0], [1.0, 1.3], [0.7, 1.0]] },
+        { "id": "pol_limit4", "color": "yellow", "coordinates": [[-2.4, -2.4], [-1.8, -2.4], [-1.3, -1.0], [-1.2, 0.6], [-2.0, 0.8]] },
+        { "id": "pol_limit5", "color": "green",  "coordinates": [[-1.1, -2.2], [-0.5, -2.3], [-0.6, 1.0], [-1.2, 0.9]] }
+      ]
+    },
+    {
+      "case_study": 4,
+      "name": "VAN0042-RK-1-31",
+      "doi_url": "https://portal.hubmapconsortium.org/browse/dataset/271efc13304fbec50b1fe3c111ceea3e",
+      "polygons": [
+        { "id": "pol_limit1", "color": "orange", "coordinates": [[-0.2, -2.0], [-0.1, -1.9], [0.5, 1.1], [-0.2, 1.1]] },
+        { "id": "pol_limit2", "color": "black",  "coordinates": [[-0.1, -3.8], [0.5, -3.8], [0.7, -1.4], [0.7, -0.2], [0.4, -0.1]] },
+        { "id": "pol_limit3", "color": "red",    "coordinates": [[1.0, -3.7], [1.5, -3.7], [1.6, 0.5], [1.3, 0.3], [0.9, -0.5]] },
+        { "id": "pol_limit4", "color": "yellow", "coordinates": [[0.8, 0.8], [4.0, 0.8], [4.0, 2.1], [0.4, 2.1]] },
+        { "id": "pol_limit5", "color": "green",  "coordinates": [[-1.0, -2.5], [-0.5, -2.5], [-0.7, 0.9], [-1.3, 1.0]] }
+      ]
+    },
+    {
+      "case_study": 5,
+      "name": "VAN0049-RK-1-35",
+      "doi_url": "https://portal.hubmapconsortium.org/browse/dataset/5830c05eae7383c9666f1e15f48a3ba5",
+      "polygons": [
+        { "id": "pol_limit1", "color": "orange", "coordinates": [[-0.2, -3.8], [0.2, -3.8], [0.2, 2.0], [-0.15, 2.0]] },
+        { "id": "pol_limit2", "color": "black",  "coordinates": [[-1.6, -3.0], [-0.8, -3.5], [-0.4, -0.8], [-0.3, 1.3], [-0.5, 1.3]] },
+        { "id": "pol_limit3", "color": "red",    "coordinates": [[-3.0, -2.0], [-2.2, -2.2], [-1.2, -0.1], [-0.75, 1.3], [-1.3, 1.3]] },
+        { "id": "pol_limit4", "color": "yellow", "coordinates": [[0.55, -3.1], [1.2, -3.0], [0.7, 1.0], [0.4, 1.0]] },
+        { "id": "pol_limit5", "color": "green",  "coordinates": [[1.7, -2.9], [2.2, -2.7], [1.3, 0.9], [0.9, 0.9], [1.2, -0.9]] }
+      ]
+    }
+  ]
+}
